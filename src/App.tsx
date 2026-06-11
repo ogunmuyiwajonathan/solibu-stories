@@ -8,6 +8,8 @@ import BookDetail from './pages/BookDetail';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import SignIn from './pages/SignIn';
+import MyFavourites from './pages/MyFavourites';
+import MyProfile from './pages/MyProfile';
 import NotFound from './pages/NotFound';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -15,7 +17,11 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AllNovels from './pages/admin/AllNovels';
 import AddNovel from './pages/admin/AddNovel';
 import EditNovel from './pages/admin/EditNovel';
+import AllBanners from './pages/admin/AllBanners';
+import AddBanner from './pages/admin/AddBanner';
+import EditBanner from './pages/admin/EditBanner';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 const Reader = lazy(() => import('./pages/Reader'));
 
@@ -40,20 +46,25 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/signin" element={<SignIn />} />
+        <Route path="/favourites" element={<ProtectedRoute><MyFavourites /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
 
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <AdminProtectedRoute>
               <AdminLayout />
-            </ProtectedRoute>
+            </AdminProtectedRoute>
           }
         >
           <Route index element={<AdminDashboard />} />
           <Route path="novels" element={<AllNovels />} />
           <Route path="novels/add" element={<AddNovel />} />
           <Route path="novels/edit/:id" element={<EditNovel />} />
+          <Route path="banners" element={<AllBanners />} />
+          <Route path="banners/add" element={<AddBanner />} />
+          <Route path="banners/edit/:id" element={<EditBanner />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />
