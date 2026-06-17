@@ -1,0 +1,57 @@
+# CodeRabbit configuration
+# https://docs.coderabbit.ai/configuration/example
+
+language: en-US
+
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - master
+
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  path_instructions:
+    - path: "src/**/*.tsx"
+      instructions: |
+        React component using TypeScript, Tailwind CSS, Convex, and Clerk.
+        Check for: proper prop types, accessibility (aria attributes),
+        responsive design (mobile-first), semantic HTML, Convex hook usage.
+    - path: "src/**/*.ts"
+      instructions: |
+        TypeScript. Check for: proper typing (no `any`), error handling,
+        Convex query/mutation patterns, Clerk auth integration.
+    - path: "src/data/**"
+      instructions: |
+        Convex data hooks. Check for: proper useQuery/useMutation usage,
+        correct index usage, skip patterns for unauthenticated state.
+    - path: "src/hooks/**"
+      instructions: |
+        Custom React hooks. Check for: Clerk auth integration,
+        Convex reactive queries, proper cleanup.
+    - path: "convex/**"
+      instructions: |
+        Convex backend functions. Check for: schema validation (v.*),
+        proper index usage, auth checks (ctx.auth.getUserIdentity()),
+        no secrets in code.
+    - path: "scripts/**"
+      instructions: |
+        Server-side scripts. Check for: hardcoded secrets,
+        proper env var usage, error handling.
+
+  tools:
+    semgrep:
+      enabled: true
+    context:
+      files:
+        - "package.json"
+        - "tsconfig.json"
+        - "tailwind.config.*"
+        - "vite.config.*"
+        - "convex/schema.ts"
