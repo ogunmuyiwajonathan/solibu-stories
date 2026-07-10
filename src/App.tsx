@@ -20,6 +20,7 @@ import AllBanners from './pages/admin/AllBanners';
 import AddBanner from './pages/admin/AddBanner';
 import EditBanner from './pages/admin/EditBanner';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 
 export default function App() {
   return (
@@ -36,7 +37,7 @@ export default function App() {
         <Route path="/favourites" element={<ProtectedRoute><MyFavourites /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
 
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="novels" element={<AllNovels />} />
           <Route path="novels/add" element={<AddNovel />} />
