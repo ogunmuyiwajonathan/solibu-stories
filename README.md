@@ -1,73 +1,66 @@
-# React + TypeScript + Vite
+# Solibu Stories
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A digital story-reading platform for discovering, browsing, and reading books. Built with React, TypeScript, and Convex.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Browse Library** — Explore a curated collection of books with search and filtering
+- **Read Books** — In-browser reading experience with page navigation
+- **3D Book Animations** — Immersive Three.js / React Three Fiber visualizations
+- **Dark / Sepia Themes** — Comfortable reading in any lighting condition
+- **Admin Panel** — Manage books, users, and platform content
+- **Favorites & Reviews** — Save books and share your thoughts
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, TypeScript, Vite |
+| Backend + Database | Convex |
+| Authentication | Clerk |
+| Styling | Tailwind CSS v3, shadcn/ui |
+| 3D Graphics | Three.js, React Three Fiber, Drei |
+| Animation | Framer Motion |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install dependencies
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Required Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Before running the app, you'll need to configure:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. **Clerk** — Create an application at [clerk.com](https://clerk.com) and add your publishable key as `VITE_CLERK_PUBLISHABLE_KEY`.
+2. **Convex** — Deploy a project at [convex.dev](https://convex.dev) and set `VITE_CONVEX_URL` to your deployment URL. Then run `npx convex dev` to sync schema and functions.
+
+## Project Structure
+
 ```
+src/          — Application source code (components, pages, routes, hooks)
+convex/       — Convex backend schema, queries, mutations, and actions
+public/       — Static assets including book cover images
+```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `CLERK_SECRET_KEY` | Clerk API secret key (server-side) |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key (client-side) |
+| `CONVEX_DEPLOYMENT` | Convex deployment identifier |
+| `VITE_CONVEX_URL` | Convex deployment URL |
+
+## Scripts
+
+| Script | Command |
+|--------|---------|
+| `dev` | `vite` — Start dev server |
+| `build` | `tsc -b && vite build` — Type-check and build |
+| `lint` | `eslint .` — Run ESLint |
+| `preview` | `vite preview` — Preview production build locally |

@@ -68,9 +68,6 @@ export default function HeroBook({ book, onBookChange, books }: HeroBookProps) {
               </p>
 
               <div className="mt-4 pt-4 border-t border-[#D4B98A]/40">
-                <span className="inline-block bg-[#F6E9D6] text-[#6B5237] text-xs font-medium px-2 py-0.5 rounded">
-                  {book.genre}
-                </span>
                 <div className="mt-2 flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <span
@@ -94,7 +91,7 @@ export default function HeroBook({ book, onBookChange, books }: HeroBookProps) {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => {
-          navigate(`/book/${book.id}`);
+          navigate(`/book/${book._id}`);
           window.scrollTo(0, 0);
         }}
         className="mt-8 btn-primary btn-shimmer flex items-center gap-2"
@@ -115,7 +112,7 @@ export default function HeroBook({ book, onBookChange, books }: HeroBookProps) {
       <div className="mt-10 flex gap-3">
         {featuredBooks.map((fb) => (
           <motion.button
-            key={fb.id}
+            key={fb._id}
             whileHover={{ scale: 1.1, y: -2 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
@@ -123,7 +120,7 @@ export default function HeroBook({ book, onBookChange, books }: HeroBookProps) {
               setIsOpen(false);
             }}
             className={`w-14 h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-              fb.id === book.id
+              fb._id === book._id
                 ? 'border-[#C89B5A] shadow-lg shadow-[#C89B5A]/20'
                 : 'border-transparent opacity-60 hover:opacity-100'
             }`}

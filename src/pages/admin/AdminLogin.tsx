@@ -1,162 +1,141 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Mail, Lock, Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
+import { SignIn, useAuth } from '@clerk/react';
+import { Navigate, Link } from 'react-router-dom';
+import { Shield, ArrowLeft, XCircle } from 'lucide-react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function AdminLogin() {
-  const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading, isAdmin, signInWithEmail } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const { isLoaded, isSignedIn } = useAuth();
+  const isAdmin = useQuery(api.admin.isAdmin);
+  const rejectNonAdmin = useMutation(api.admin.checkAndRejectNonAdmin);
+  const [rejected, setRejected] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated && isAdmin) {
-      navigate('/admin', { replace: true });
+    if (isSignedIn && isAdmin === false && !rejected) {
+      setRejected(true);
+      rejectNonAdmin();
     }
-  }, [isAuthenticated, isAdmin, authLoading, navigate]);
+  }, [isSignedIn, isAdmin, rejected, rejectNonAdmin]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
-    setIsSubmitting(true);
-
-    try {
-      const { error } = await signInWithEmail(email, password);
-      if (error) {
-        setErrorMessage('Invalid email or password. Please try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      const { data: adminUser } = await supabase
-        .from('admin_users')
-        .select('id')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      if (!adminUser) {
-        await supabase.auth.signOut();
-        setErrorMessage('You are not authorized to access this panel.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      navigate('/admin', { replace: true });
-    } catch {
-      setErrorMessage('An unexpected error occurred. Please try again.');
-      setIsSubmitting(false);
-    }
-  };
-
-  if (authLoading) {
+  if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
+      <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[var(--gold)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (isAuthenticated && isAdmin) {
+  if (isSignedIn) {
+    if (isAdmin === undefined) {
+      return (
+        <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
+        </div>
+      );
+    }
+    if (isAdmin) {
+      return <Navigate to="/admin" replace />;
+    }
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-6">
+        <div className="bg-[var(--surface-strong)] border border-[var(--border-soft)] rounded-2xl p-8 text-center max-w-md">
+          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 inline-flex mb-4">
+            <XCircle className="w-8 h-8 text-red-400" />
+          </div>
+          <h1 className="font-display text-xl font-semibold text-[var(--text-strong)] mb-2">
+            Access Denied
+          </h1>
+          <p className="text-[var(--text-muted)] text-sm mb-6">
+            You are signed in but not registered as an author. If you believe this is a mistake, contact the site owner.
+          </p>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm text-[var(--gold)] hover:text-[var(--gold-soft)] transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to home
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <div className="flex items-center gap-2.5 mb-10 justify-center">
-          <div className="p-2 rounded-xl bg-[var(--gold)]/10">
-            <BookOpen className="w-6 h-6 text-[var(--gold)]" />
+    <div className="min-h-screen bg-[var(--color-bg)]">
+      {/* Mobile: full-screen background image */}
+      <div className="lg:hidden fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#12101a] to-[#1a1525]" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&q=80')] bg-cover bg-center opacity-15" />
+        <div className="absolute inset-0 bg-[var(--color-bg)]/85" />
+      </div>
+
+      <div className="flex min-h-screen relative z-10">
+        {/* Desktop left panel - sticky, fits viewport */}
+        <div className="hidden lg:flex lg:w-1/2 h-screen sticky top-0 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#12101a] to-[#1a1525]" />
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&q=80')] bg-cover bg-center opacity-15" />
+          <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-center max-w-md"
+            >
+              <div className="inline-flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-2xl bg-[var(--gold)]/10 border border-[var(--gold)]/20">
+                  <Shield className="w-8 h-8 text-[var(--gold)]" />
+                </div>
+                <span className="font-display text-3xl font-semibold text-[var(--text-strong)] tracking-tight">
+                  Author Portal
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/25">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] animate-pulse" />
+                <span className="text-[var(--gold)] text-xs font-medium uppercase tracking-widest">
+                  Strictly for Authors
+                </span>
+              </div>
+              <h2 className="font-display text-4xl font-medium text-[var(--text-strong)] leading-tight mb-4">
+                Your workspace awaits
+              </h2>
+              <p className="text-[var(--text-muted)] text-lg leading-relaxed">
+                Publish stories, track readership, and manage your portfolio from a single dashboard.
+              </p>
+            </motion.div>
           </div>
-          <span className="font-display text-2xl font-semibold text-[var(--text-strong)] tracking-tight">
-            Solibu Stories
-          </span>
         </div>
 
-        <h1 className="font-display text-3xl font-medium text-[var(--text-strong)] mb-2 text-center">
-          Admin Access
-        </h1>
-        <p className="text-[var(--text-muted)] mb-8 text-center">
-          Sign in to access the admin dashboard
-        </p>
-
-        {errorMessage && (
+        {/* Right panel - scrollable */}
+        <div className="w-full lg:w-1/2 h-screen overflow-y-auto flex items-start justify-center py-8 px-6 sm:px-12">
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 rounded-xl p-4 flex items-center gap-3"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md"
           >
-            <AlertTriangle className="w-5 h-5 text-[var(--destructive)] flex-shrink-0" />
-            <span className="text-[var(--destructive)] text-sm font-medium">{errorMessage}</span>
+            <div className="lg:hidden flex items-center gap-2.5 mb-10">
+              <div className="p-2 rounded-xl bg-[var(--gold)]/10">
+                <Shield className="w-6 h-6 text-[var(--gold)]" />
+              </div>
+              <span className="font-display text-2xl font-semibold text-[var(--text-strong)] tracking-tight">
+                Author Portal
+              </span>
+            </div>
+
+            <SignIn routing="hash" signUpUrl="/signup" fallbackRedirectUrl="/admin" />
+
+            <div className="mt-8 text-center">
+              <Link to="/signin" className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-soft)] transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Back to sign in
+              </Link>
+            </div>
           </motion.div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                className="w-full pl-12 pr-4 py-3.5 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full pl-12 pr-12 py-3.5 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-soft)]"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 py-3.5 bg-[var(--gold)] hover:bg-[var(--gold-deep)] text-[var(--color-bg)] font-semibold rounded-xl shadow-lg shadow-[var(--gold)]/20 transition-all hover:shadow-xl hover:shadow-[var(--gold)]/30 disabled:opacity-50"
-          >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-[var(--text-muted)] hover:text-[var(--text-soft)] transition-colors">
-            ← Back to home
-          </a>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

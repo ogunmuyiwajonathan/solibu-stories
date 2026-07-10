@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Upload, FileText, Save, X, ImageIcon, Loader2, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
-import { genres, addBook, uploadCover, uploadPdf } from '../../data/books';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Save, X, ImageIcon, Loader2, CheckCircle2, Circle, AlertTriangle, PartyPopper, Link } from 'lucide-react';
+import { addBook, uploadCover } from '../../data/books';
 import StarRating from '../../components/StarRating';
 
 interface ValidationField {
@@ -15,7 +15,6 @@ interface ValidationField {
 export default function AddNovel() {
   const navigate = useNavigate();
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -24,29 +23,36 @@ export default function AddNovel() {
     synopsis: '',
     rating: 4.0,
     featured: false,
-    order_index: 1,
+    reading_time: '',
+    chapters: '',
+    pdf_url: '',
   });
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrors, setShowErrors] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const requirements: ValidationField[] = [
     { name: 'title', label: 'Book Title', required: true, met: formData.title.trim().length > 0 },
     { name: 'author', label: 'Author Name', required: true, met: formData.author.trim().length > 0 },
-    { name: 'genre', label: 'Genre', required: true, met: formData.genre.length > 0 },
     { name: 'synopsis', label: 'Synopsis', required: true, met: formData.synopsis.trim().length > 0 },
     { name: 'cover', label: 'Cover Image', required: true, met: coverFile !== null },
-    { name: 'pdf', label: 'PDF File', required: false, met: pdfFile !== null },
+    { name: 'pdf', label: 'Buy Link', required: true, met: formData.pdf_url.trim().length > 0 },
   ];
 
   const allRequiredMet = requirements.filter(r => r.required).every(r => r.met);
   const missingCount = requirements.filter(r => r.required && !r.met).length;
+
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => navigate('/admin'), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -63,14 +69,6 @@ export default function AddNovel() {
     }
   };
 
-  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPdfFile(file);
-      setPdfFileName(file.name);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allRequiredMet) {
@@ -81,7 +79,6 @@ export default function AddNovel() {
     setErrorMessage('');
     try {
       let coverUrl = '';
-      let pdfUrl = '';
 
       if (coverFile) {
         setUploadProgress('Uploading cover image...');
@@ -100,18 +97,6 @@ export default function AddNovel() {
         return;
       }
 
-      if (pdfFile) {
-        setUploadProgress('Uploading PDF file...');
-        const url = await uploadPdf(pdfFile);
-        if (!url) {
-          setErrorMessage('Failed to upload PDF. Please try again.');
-          setIsSaving(false);
-          setUploadProgress('');
-          return;
-        }
-        pdfUrl = url;
-      }
-
       setUploadProgress('Saving book...');
       const result = await addBook({
         title: formData.title,
@@ -119,10 +104,11 @@ export default function AddNovel() {
         genre: formData.genre,
         synopsis: formData.synopsis,
         cover_url: coverUrl,
-        pdf_url: pdfUrl,
+        pdf_url: formData.pdf_url,
         rating: formData.rating,
         featured: formData.featured,
-        order_index: formData.order_index,
+        reading_time: formData.reading_time || undefined,
+        chapters: formData.chapters ? Number(formData.chapters) : undefined,
       });
 
       if (!result) {
@@ -132,7 +118,9 @@ export default function AddNovel() {
         return;
       }
 
-      navigate('/admin/novels');
+      setIsSaving(false);
+      setUploadProgress('');
+      setShowSuccess(true);
     } catch (err) {
       setErrorMessage('An unexpected error occurred. Please try again.');
       setUploadProgress('');
@@ -215,36 +203,54 @@ export default function AddNovel() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
-                  Genre <span className="text-[var(--destructive)]">*</span>
-                </label>
-                <select
-                  name="genre"
-                  value={formData.genre}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-[var(--surface-light)] border rounded-xl text-[var(--text-strong)] focus:outline-none focus:ring-2 transition-all ${
-                    showErrors && !formData.genre
-                      ? 'border-[var(--destructive)] focus:border-[var(--destructive)] focus:ring-[var(--destructive)]/20'
-                      : 'border-[var(--border-soft)] focus:border-[var(--gold)] focus:ring-[var(--gold)]/20'
-                  }`}
-                >
-                  <option value="">Select a genre</option>
-                  {genres.filter(g => g !== 'All').map((genre) => (
-                    <option key={genre} value={genre}>{genre}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Rating</label>
                 <div className="flex items-center gap-3">
-                  <StarRating
-                    rating={formData.rating}
-                    size="md"
-                    interactive
-                    onChange={(r) => setFormData((prev) => ({ ...prev, rating: r }))}
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={formData.rating}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0 && val <= 5) {
+                        setFormData((prev) => ({ ...prev, rating: val }));
+                      }
+                    }}
+                    className="w-24 px-3 py-2 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] text-center focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
                   />
-                  <span className="text-[var(--text-strong)] font-medium">{formData.rating.toFixed(1)}</span>
+                  <StarRating rating={formData.rating} size="md" />
                 </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
+                  Reading Time <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="reading_time"
+                  value={formData.reading_time}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:border-[var(--gold)] focus:ring-[var(--gold)]/20 transition-all"
+                  placeholder="e.g. ~6 hours read"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
+                  Chapters <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                </label>
+                <input
+                  type="number"
+                  name="chapters"
+                  value={formData.chapters}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:border-[var(--gold)] focus:ring-[var(--gold)]/20 transition-all"
+                  placeholder="e.g. 12"
+                />
               </div>
             </div>
 
@@ -304,40 +310,27 @@ export default function AddNovel() {
 
             <div>
               <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
-                PDF File <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                Buy Link <span className="text-[var(--destructive)]">*</span>
               </label>
-              <div
-                onClick={() => pdfInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                  pdfFileName
-                    ? 'border-[var(--gold)] bg-[var(--gold)]/5'
-                    : 'border-[var(--border-soft)] hover:border-[var(--gold)]/50'
-                }`}
-              >
-                {pdfFileName ? (
-                  <div className="flex items-center justify-center gap-3">
-                    <FileText className="w-6 h-6 text-[var(--gold)]" />
-                    <span className="text-[var(--text-strong)] text-sm">{pdfFileName}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setPdfFileName(null); setPdfFile(null); }}
-                      className="p-1 text-[var(--destructive)] hover:text-[var(--destructive)]/80"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                    <p className="text-[var(--text-muted)] text-sm">Click to upload PDF</p>
-                    <p className="text-[var(--text-muted)]/60 text-xs">Users can read this as an interactive book</p>
-                  </div>
-                )}
-                <input ref={pdfInputRef} type="file" accept=".pdf" onChange={handlePdfUpload} className="hidden" />
+              <div className="relative">
+                <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                <input
+                  type="url"
+                  name="pdf_url"
+                  value={formData.pdf_url}
+                  onChange={handleChange}
+                  placeholder="Paste the website link where users can buy/read this story"
+                  className={`w-full pl-11 pr-4 py-3 bg-[var(--surface-light)] border rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:ring-2 transition-all ${
+                    showErrors && !formData.pdf_url.trim()
+                      ? 'border-[var(--destructive)] focus:ring-[var(--destructive)]/20'
+                      : 'border-[var(--border-soft)] focus:border-[var(--gold)] focus:ring-[var(--gold)]/20'
+                  }`}
+                />
               </div>
+              <p className="text-[var(--text-muted)]/60 text-xs mt-1.5">Users will be redirected to this link to buy or read the story</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div>
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div
@@ -352,17 +345,6 @@ export default function AddNovel() {
                   </div>
                   <span className="text-[var(--text-soft)] text-sm">Featured on homepage</span>
                 </label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Display Order</label>
-                <input
-                  type="number"
-                  name="order_index"
-                  value={formData.order_index}
-                  onChange={handleChange}
-                  min={1}
-                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
-                />
               </div>
             </div>
 
@@ -441,6 +423,71 @@ export default function AddNovel() {
           </div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="bg-[var(--color-surface)] rounded-2xl border border-[var(--border-soft)] p-10 text-center max-w-md mx-4 shadow-2xl"
+            >
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 15, stiffness: 200, delay: 0.2 }}
+                className="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--gold)]/10 border-2 border-[var(--gold)]/30 flex items-center justify-center"
+              >
+                <PartyPopper className="w-10 h-10 text-[var(--gold)]" />
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="font-display text-2xl font-bold text-[var(--text-strong)] mb-2"
+              >
+                Congratulations!
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-[var(--text-muted)] mb-2"
+              >
+                Your novel has been published successfully.
+              </motion.p>
+
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="text-[var(--text-muted)] text-sm mb-8"
+              >
+                Redirecting to dashboard in 4 seconds...
+              </motion.p>
+
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                onClick={() => navigate('/admin')}
+                className="px-6 py-3 bg-[var(--gold)] hover:bg-[var(--gold-deep)] text-[var(--color-bg)] font-medium rounded-xl transition-colors"
+              >
+                Back to Dashboard
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

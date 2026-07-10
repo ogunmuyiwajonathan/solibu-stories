@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Star, Layers, Plus, Eye, TrendingUp, Loader2 } from 'lucide-react';
+import { BookOpen, Star, Plus, Eye, TrendingUp, Loader2 } from 'lucide-react';
 import { fetchBooks, type Book } from '../../data/books';
 
 export default function AdminDashboard() {
@@ -18,18 +18,14 @@ export default function AdminDashboard() {
   }, []);
 
   const featuredCount = useMemo(() => books.filter(b => b.featured).length, [books]);
-  const genreCount = useMemo(() => new Set(books.map(b => b.genre)).size, [books]);
-  const withPdfCount = useMemo(() => books.filter(b => b.pdf_url).length, [books]);
   const recentBooks = useMemo(
-    () => [...books].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5),
+    () => [...books].sort((a, b) => (b.last_updated ?? b._creationTime) - (a.last_updated ?? a._creationTime)).slice(0, 5),
     [books]
   );
 
   const statCards = [
     { label: 'Total Novels', value: books.length, icon: <BookOpen className="w-5 h-5" />, color: 'text-[var(--gold)]' },
     { label: 'Featured', value: featuredCount, icon: <Star className="w-5 h-5" />, color: 'text-[var(--gold-soft)]' },
-    { label: 'Genres', value: genreCount, icon: <Layers className="w-5 h-5" />, color: 'text-[var(--text-muted)]' },
-    { label: 'With PDF', value: withPdfCount, icon: <BookOpen className="w-5 h-5" />, color: 'text-[var(--gold)]' },
   ];
 
   if (isLoading) {
@@ -78,7 +74,14 @@ export default function AdminDashboard() {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--surface-light)] text-[var(--text-strong)] rounded-xl font-medium text-sm hover:bg-[var(--surface-light)]/80 transition-colors border border-[var(--border-soft)]"
         >
           <Eye className="w-4 h-4" />
-          View All
+          All Novels
+        </Link>
+        <Link
+          to="/admin/banners"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--surface-light)] text-[var(--text-strong)] rounded-xl font-medium text-sm hover:bg-[var(--surface-light)]/80 transition-colors border border-[var(--border-soft)]"
+        >
+          <Eye className="w-4 h-4" />
+          All Banners
         </Link>
       </div>
 
@@ -94,7 +97,7 @@ export default function AdminDashboard() {
         </div>
         <div className="divide-y divide-[var(--border-soft)]">
           {recentBooks.map((book) => (
-            <div key={book.id} className="px-6 py-4 flex items-center gap-4 hover:bg-[var(--surface-light)] transition-colors">
+            <Link key={book._id} to="/admin/novels" className="px-6 py-4 flex items-center gap-4 hover:bg-[var(--surface-light)] transition-colors cursor-pointer">
               <img
                 src={book.cover_url}
                 alt={book.title}
@@ -104,13 +107,10 @@ export default function AdminDashboard() {
                 <p className="text-[var(--text-strong)] font-medium text-sm truncate">{book.title}</p>
                 <p className="text-[var(--text-muted)] text-xs">{book.author}</p>
               </div>
-              <span className="bg-[var(--gold)]/10 text-[var(--gold)] text-xs font-medium px-2.5 py-1 rounded-full">
-                {book.genre}
-              </span>
               <span className="text-[var(--text-muted)] text-xs">
-                {new Date(book.created_at).toLocaleDateString()}
+                {new Date(book._creationTime).toLocaleDateString()}
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       </motion.div>

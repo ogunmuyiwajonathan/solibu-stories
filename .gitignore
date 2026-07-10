@@ -12,21 +12,15 @@ dist
 dist-ssr
 *.local
 
+# Convex generated
+convex/_generated
+
 # Environment files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-
-# Screenshots and images
-*.png
-!public/images/*.png
-!public/images/*.jpg
-*.jpg
-!public/images/*.jpg
-screenshots/
-image.png
 
 # Test files and results
 test-results/
@@ -44,3 +38,6 @@ info.md
 *.mdx
 *.md
 !README.md
+
+# Google OAuth credentials
+client_secret_*.json

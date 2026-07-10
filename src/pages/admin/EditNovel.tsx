@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Upload, FileText, Save, X, ImageIcon, Loader2, CheckCircle2, Circle, AlertTriangle } from 'lucide-react';
-import { genres, fetchBookById, updateBook, uploadCover, uploadPdf } from '../../data/books';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Save, X, ImageIcon, Loader2, CheckCircle2, Circle, AlertTriangle, Link } from 'lucide-react';
+import { fetchBookById, updateBook, uploadCover } from '../../data/books';
 import StarRating from '../../components/StarRating';
+import type { Id } from 'convex/_generated/dataModel';
 
 interface ValidationField {
   name: string;
@@ -16,12 +17,19 @@ export default function EditNovel() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrors, setShowErrors] = useState(false);
+  const [showToast, setShowToast] = useState('');
+
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => navigate('/admin'), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast, navigate]);
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -29,20 +37,18 @@ export default function EditNovel() {
     synopsis: '',
     rating: 4.0,
     featured: false,
-    order_index: 1,
+    reading_time: '',
+    chapters: '',
+    pdf_url: '',
   });
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfFileName, setPdfFileName] = useState<string | null>(null);
-  const [existingPdfUrl, setExistingPdfUrl] = useState('');
   const [existingCoverUrl, setExistingCoverUrl] = useState('');
 
   useEffect(() => {
     const loadBook = async () => {
-      const bookId = parseInt(id || '0');
-      const book = await fetchBookById(bookId);
+      const book = await fetchBookById(id!);
       if (book) {
         setFormData({
           title: book.title,
@@ -51,14 +57,12 @@ export default function EditNovel() {
           synopsis: book.synopsis,
           rating: book.rating,
           featured: book.featured,
-          order_index: book.order_index,
+          reading_time: book.reading_time || '',
+          chapters: book.chapters ? String(book.chapters) : '',
+          pdf_url: book.pdf_url || '',
         });
         setCoverPreview(book.cover_url);
         setExistingCoverUrl(book.cover_url);
-        if (book.pdf_url) {
-          setExistingPdfUrl(book.pdf_url);
-          setPdfFileName('Current PDF');
-        }
       }
       setIsLoading(false);
     };
@@ -68,10 +72,9 @@ export default function EditNovel() {
   const requirements: ValidationField[] = [
     { name: 'title', label: 'Book Title', required: true, met: formData.title.trim().length > 0 },
     { name: 'author', label: 'Author Name', required: true, met: formData.author.trim().length > 0 },
-    { name: 'genre', label: 'Genre', required: true, met: formData.genre.length > 0 },
     { name: 'synopsis', label: 'Synopsis', required: true, met: formData.synopsis.trim().length > 0 },
     { name: 'cover', label: 'Cover Image', required: true, met: coverPreview !== null && coverPreview.length > 0 },
-    { name: 'pdf', label: 'PDF File', required: false, met: pdfFile !== null || existingPdfUrl.length > 0 },
+    { name: 'pdf', label: 'Buy Link', required: true, met: formData.pdf_url.trim().length > 0 },
   ];
 
   const allRequiredMet = requirements.filter(r => r.required).every(r => r.met);
@@ -92,14 +95,6 @@ export default function EditNovel() {
     }
   };
 
-  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setPdfFile(file);
-      setPdfFileName(file.name);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!allRequiredMet) {
@@ -109,9 +104,7 @@ export default function EditNovel() {
     setIsSaving(true);
     setErrorMessage('');
     try {
-      const bookId = parseInt(id || '0');
       let coverUrl = existingCoverUrl;
-      let pdfUrl = existingPdfUrl;
 
       if (coverFile) {
         const url = await uploadCover(coverFile);
@@ -121,30 +114,18 @@ export default function EditNovel() {
           return;
         }
         coverUrl = url;
-      } else {
-        coverUrl = existingCoverUrl;
       }
 
-      if (pdfFile) {
-        const url = await uploadPdf(pdfFile);
-        if (!url) {
-          setErrorMessage('Failed to upload PDF. Please try again.');
-          setIsSaving(false);
-          return;
-        }
-        pdfUrl = url;
-      }
-
-      const result = await updateBook(bookId, {
+      const result = await updateBook(id! as Id<"books">, {
         title: formData.title,
         author: formData.author,
-        genre: formData.genre,
         synopsis: formData.synopsis,
         cover_url: coverUrl,
-        pdf_url: pdfUrl,
+        pdf_url: formData.pdf_url,
         rating: formData.rating,
         featured: formData.featured,
-        order_index: formData.order_index,
+        reading_time: formData.reading_time || undefined,
+        chapters: formData.chapters ? Number(formData.chapters) : undefined,
       });
 
       if (!result) {
@@ -153,7 +134,7 @@ export default function EditNovel() {
         return;
       }
 
-      navigate('/admin/novels');
+      setShowToast('Book updated successfully!');
     } catch (err) {
       setErrorMessage('An unexpected error occurred. Please try again.');
     } finally {
@@ -233,36 +214,54 @@ export default function EditNovel() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
-                  Genre <span className="text-[var(--destructive)]">*</span>
-                </label>
-                <select
-                  name="genre"
-                  value={formData.genre}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-[var(--surface-light)] border rounded-xl text-[var(--text-strong)] focus:outline-none focus:ring-2 transition-all ${
-                    showErrors && !formData.genre
-                      ? 'border-[var(--destructive)] focus:ring-[var(--destructive)]/20'
-                      : 'border-[var(--border-soft)] focus:border-[var(--gold)] focus:ring-[var(--gold)]/20'
-                  }`}
-                >
-                  <option value="">Select a genre</option>
-                  {genres.filter(g => g !== 'All').map((genre) => (
-                    <option key={genre} value={genre}>{genre}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Rating</label>
                 <div className="flex items-center gap-3">
-                  <StarRating
-                    rating={formData.rating}
-                    size="md"
-                    interactive
-                    onChange={(r) => setFormData((prev) => ({ ...prev, rating: r }))}
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={formData.rating}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0 && val <= 5) {
+                        setFormData((prev) => ({ ...prev, rating: val }));
+                      }
+                    }}
+                    className="w-24 px-3 py-2 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] text-center focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
                   />
-                  <span className="text-[var(--text-strong)] font-medium">{formData.rating.toFixed(1)}</span>
+                  <StarRating rating={formData.rating} size="md" />
                 </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
+                  Reading Time <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="reading_time"
+                  value={formData.reading_time}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:border-[var(--gold)] focus:ring-[var(--gold)]/20 transition-all"
+                  placeholder="e.g. ~6 hours read"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
+                  Chapters <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                </label>
+                <input
+                  type="number"
+                  name="chapters"
+                  value={formData.chapters}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:border-[var(--gold)] focus:ring-[var(--gold)]/20 transition-all"
+                  placeholder="e.g. 12"
+                />
               </div>
             </div>
 
@@ -320,37 +319,27 @@ export default function EditNovel() {
 
             <div>
               <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
-                PDF File <span className="text-[var(--text-muted)] text-xs">(optional)</span>
+                Buy Link <span className="text-[var(--destructive)]">*</span>
               </label>
-              <div
-                onClick={() => pdfInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                  pdfFileName ? 'border-[var(--gold)] bg-[var(--gold)]/5' : 'border-[var(--border-soft)] hover:border-[var(--gold)]/50'
-                }`}
-              >
-                {pdfFileName ? (
-                  <div className="flex items-center justify-center gap-3">
-                    <FileText className="w-6 h-6 text-[var(--gold)]" />
-                    <span className="text-[var(--text-strong)] text-sm">{pdfFileName}</span>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setPdfFileName(null); setPdfFile(null); setExistingPdfUrl(''); }}
-                      className="p-1 text-[var(--destructive)] hover:text-[var(--destructive)]/80"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="w-8 h-8 text-[var(--text-muted)] mx-auto" />
-                    <p className="text-[var(--text-muted)] text-sm">Click to upload PDF</p>
-                  </div>
-                )}
-                <input ref={pdfInputRef} type="file" accept=".pdf" onChange={handlePdfUpload} className="hidden" />
+              <div className="relative">
+                <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+                <input
+                  type="url"
+                  name="pdf_url"
+                  value={formData.pdf_url}
+                  onChange={handleChange}
+                  placeholder="Paste the website link where users can buy/read this story"
+                  className={`w-full pl-11 pr-4 py-3 bg-[var(--surface-light)] border rounded-xl text-[var(--text-strong)] placeholder:text-[var(--text-muted)]/60 focus:outline-none focus:ring-2 transition-all ${
+                    showErrors && !formData.pdf_url.trim()
+                      ? 'border-[var(--destructive)] focus:ring-[var(--destructive)]/20'
+                      : 'border-[var(--border-soft)] focus:border-[var(--gold)] focus:ring-[var(--gold)]/20'
+                  }`}
+                />
               </div>
+              <p className="text-[var(--text-muted)]/60 text-xs mt-1.5">Users will be redirected to this link to buy or read the story</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div>
               <div>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div
@@ -365,17 +354,6 @@ export default function EditNovel() {
                   </div>
                   <span className="text-[var(--text-soft)] text-sm">Featured on homepage</span>
                 </label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">Display Order</label>
-                <input
-                  type="number"
-                  name="order_index"
-                  value={formData.order_index}
-                  onChange={handleChange}
-                  min={1}
-                  className="w-full px-4 py-3 bg-[var(--surface-light)] border border-[var(--border-soft)] rounded-xl text-[var(--text-strong)] focus:outline-none focus:border-[var(--gold)] focus:ring-2 focus:ring-[var(--gold)]/20 transition-all"
-                />
               </div>
             </div>
 
@@ -452,6 +430,22 @@ export default function EditNovel() {
           </div>
         </motion.div>
       </div>
+
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: 20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: -20, x: 20 }}
+            className="fixed top-6 right-6 z-50 bg-[#d4af37] text-[var(--color-bg)] px-6 py-3 rounded-xl shadow-2xl font-medium text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              {showToast}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

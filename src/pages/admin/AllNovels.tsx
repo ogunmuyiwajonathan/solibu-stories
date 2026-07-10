@@ -1,15 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Pencil, Trash2, AlertCircle, Star, X, Loader2 } from 'lucide-react';
+import { Search, Pencil, Trash2, Check, Star, X, Loader2 } from 'lucide-react';
 import { fetchBooks, deleteBook, type Book } from '../../data/books';
 import SearchBar from '../../components/SearchBar';
+import type { Id } from 'convex/_generated/dataModel';
 
 export default function AllNovels() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Id<"books"> | null>(null);
 
   useEffect(() => {
     loadBooks();
@@ -28,15 +29,14 @@ export default function AllNovels() {
     return books.filter(
       (book) =>
         book.title.toLowerCase().includes(query) ||
-        book.author.toLowerCase().includes(query) ||
-        book.genre.toLowerCase().includes(query)
+        book.author.toLowerCase().includes(query)
     );
   }, [books, searchQuery]);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: Id<"books">) => {
     if (deleteConfirm === id) {
-      const success = await deleteBook(id);
-      if (success) setBooks((prev) => prev.filter((b) => b.id !== id));
+      await deleteBook(id);
+      setBooks((prev) => prev.filter((b) => b._id !== id));
       setDeleteConfirm(null);
     } else {
       setDeleteConfirm(id);
@@ -74,9 +74,7 @@ export default function AllNovels() {
                   <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Cover</th>
                   <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Title</th>
                   <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Author</th>
-                  <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Genre</th>
                   <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Rating</th>
-                  <th className="text-left px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">PDF</th>
                   <th className="text-right px-6 py-4 text-[var(--text-muted)] text-xs font-medium uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -84,7 +82,7 @@ export default function AllNovels() {
                 <AnimatePresence>
                   {filteredBooks.map((book, index) => (
                     <motion.tr
-                      key={book.id}
+                      key={book._id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -103,35 +101,21 @@ export default function AllNovels() {
                       </td>
                       <td className="px-6 py-4 text-[var(--text-muted)] text-sm">{book.author}</td>
                       <td className="px-6 py-4">
-                        <span className="bg-[var(--gold)]/10 text-[var(--gold)] text-xs font-medium px-2.5 py-1 rounded-full">
-                          {book.genre}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 fill-[var(--gold)] text-[var(--gold)]" />
                           <span className="text-[var(--text-strong)] text-sm">{book.rating}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {book.pdf_url ? (
-                          <span className="bg-[var(--gold)]/10 text-[var(--gold)] text-xs font-medium px-2.5 py-1 rounded-full">
-                            Uploaded
-                          </span>
-                        ) : (
-                          <span className="text-[var(--text-muted)] text-xs">No PDF</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          {deleteConfirm === book.id ? (
+                          {deleteConfirm === book._id ? (
                             <div className="flex items-center gap-2">
                               <span className="text-[var(--destructive)] text-xs">Confirm?</span>
                               <button
-                                onClick={() => handleDelete(book.id)}
+                                onClick={() => handleDelete(book._id)}
                                 className="p-2 bg-[var(--destructive)]/20 text-[var(--destructive)] rounded-lg hover:bg-[var(--destructive)]/30 transition-colors"
                               >
-                                <AlertCircle className="w-4 h-4" />
+                                <Check className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => setDeleteConfirm(null)}
@@ -143,13 +127,13 @@ export default function AllNovels() {
                           ) : (
                             <>
                               <Link
-                                to={`/admin/novels/edit/${book.id}`}
+                                to={`/admin/novels/edit/${book._id}`}
                                 className="p-2 text-[var(--text-muted)] hover:text-[var(--gold)] hover:bg-[var(--gold)]/10 rounded-lg transition-colors"
                               >
                                 <Pencil className="w-4 h-4" />
                               </Link>
                               <button
-                                onClick={() => handleDelete(book.id)}
+                                onClick={() => handleDelete(book._id)}
                                 className="p-2 text-[var(--text-muted)] hover:text-[var(--destructive)] hover:bg-[var(--destructive)]/10 rounded-lg transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
