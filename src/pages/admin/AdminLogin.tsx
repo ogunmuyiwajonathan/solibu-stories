@@ -2,23 +2,13 @@ import { motion } from 'framer-motion';
 import { SignIn, useAuth } from '@clerk/react';
 import { Navigate, Link } from 'react-router-dom';
 import { Shield, ArrowLeft, XCircle } from 'lucide-react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 export default function AdminLogin() {
   const { isLoaded, isSignedIn } = useAuth();
   const isAdmin = useQuery(api.admin.isAdmin);
-  const rejectNonAdmin = useMutation(api.admin.checkAndRejectNonAdmin);
-  const [rejected, setRejected] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn && isAdmin === false && !rejected) {
-      setRejected(true);
-      rejectNonAdmin();
-    }
-  }, [isSignedIn, isAdmin, rejected, rejectNonAdmin]);
 
   if (!isLoaded) {
     return (

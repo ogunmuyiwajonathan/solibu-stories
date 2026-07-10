@@ -57,33 +57,3 @@ export const removeAdmin = mutation({
     await ctx.db.delete(args.id);
   },
 });
-
-export const checkAndRejectNonAdmin = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const email = identity?.email;
-    if (!email) return { allowed: false };
-
-    const admin = await ctx.db
-      .query("admin_users")
-      .withIndex("by_email", (q) => q.eq("email", email.toLowerCase()))
-      .first();
-
-    if (admin) return { allowed: true };
-
-    const clerkSecretKey = (globalThis as any).process?.env?.CLERK_SECRET_KEY;
-    if (!clerkSecretKey) return { allowed: false };
-
-    try {
-      await fetch(`https://api.clerk.com/v1/users/${identity.subject}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${clerkSecretKey}` },
-      });
-    } catch (e) {
-      console.error("Failed to delete non-admin Clerk user:", e);
-    }
-
-    return { allowed: false };
-  },
-});
