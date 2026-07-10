@@ -10,25 +10,32 @@ export default function AdminLogin() {
   const { isLoaded, isSignedIn } = useAuth();
   const isAdmin = useQuery(api.admin.isAdmin);
 
+  // Still loading auth state
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--gold)] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
       </div>
     );
   }
 
+  // User is signed in - check if admin
   if (isSignedIn) {
+    // Still checking admin status
     if (isAdmin === undefined) {
       return (
-        <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center">
+        <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
         </div>
       );
     }
+
+    // User IS admin - redirect to admin dashboard
     if (isAdmin) {
-      return <Navigate to="/admin" replace />;
+      return <Navigate to="/admin/dashboard" replace />;
     }
+
+    // User is signed in but NOT admin - show access denied
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-6">
         <div className="bg-[var(--surface-strong)] border border-[var(--border-soft)] rounded-2xl p-8 text-center max-w-md">
@@ -39,7 +46,7 @@ export default function AdminLogin() {
             Access Denied
           </h1>
           <p className="text-[var(--text-muted)] text-sm mb-6">
-            You are signed in but not registered as an author. If you believe this is a mistake, contact the site owner.
+            Your account is not authorized to access the admin panel. Only registered authors can access this area.
           </p>
           <Link
             to="/"
@@ -53,6 +60,7 @@ export default function AdminLogin() {
     );
   }
 
+  // User is NOT signed in - show sign in form
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Mobile: full-screen background image */}
@@ -63,7 +71,7 @@ export default function AdminLogin() {
       </div>
 
       <div className="flex min-h-screen relative z-10">
-        {/* Desktop left panel - sticky, fits viewport */}
+        {/* Desktop left panel */}
         <div className="hidden lg:flex lg:w-1/2 h-screen sticky top-0 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#12101a] to-[#1a1525]" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&q=80')] bg-cover bg-center opacity-15" />
@@ -98,7 +106,7 @@ export default function AdminLogin() {
           </div>
         </div>
 
-        {/* Right panel - scrollable */}
+        {/* Right panel - sign in form */}
         <div className="w-full lg:w-1/2 h-screen overflow-y-auto flex items-start justify-center py-8 px-6 sm:px-12">
           <motion.div
             initial={{ opacity: 0, x: 30 }}
@@ -115,12 +123,20 @@ export default function AdminLogin() {
               </span>
             </div>
 
-            <SignIn routing="hash" signUpUrl="/signup" fallbackRedirectUrl="/admin" />
+            {/* 
+              IMPORTANT: signUpUrl is intentionally omitted.
+              Only existing accounts can sign in here.
+              New accounts must be created manually in Clerk dashboard.
+            */}
+            <SignIn 
+              routing="hash" 
+              fallbackRedirectUrl="/admin" 
+            />
 
             <div className="mt-8 text-center">
               <Link to="/signin" className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-soft)] transition-colors">
                 <ArrowLeft className="w-4 h-4" />
-                Back to sign in
+                Back to regular sign in
               </Link>
             </div>
           </motion.div>

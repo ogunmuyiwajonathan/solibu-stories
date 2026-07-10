@@ -11,6 +11,7 @@ import SignUp from './pages/SignUp';
 import MyFavourites from './pages/MyFavourites';
 import MyProfile from './pages/MyProfile';
 import NotFound from './pages/NotFound';
+import AdminLogin from './pages/admin/AdminLogin';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AllNovels from './pages/admin/AllNovels';
@@ -37,6 +38,10 @@ export default function App() {
         <Route path="/favourites" element={<ProtectedRoute><MyFavourites /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
 
+        {/* Admin Login - no protection needed */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Admin Dashboard - protected, only admins can access */}
         <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
           <Route index element={<AdminDashboard />} />
           <Route path="novels" element={<AllNovels />} />
