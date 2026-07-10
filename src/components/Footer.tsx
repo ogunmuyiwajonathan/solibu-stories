@@ -47,7 +47,7 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+        <div className="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-6">
@@ -61,10 +61,10 @@ export default function Footer() {
                 Solibu Stories
               </span>
             </Link>
-            <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-8 max-w-xs">
+            <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-6 max-w-xs">
               A curated library of captivating stories designed to make every reading moment feel warm, elegant, and unforgettable.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               {[
                 { icon: 'whatsapp', label: 'WhatsApp', href: 'https://wa.me/2349047651145' },
                 { icon: Instagram, label: 'Instagram', href: 'https://www.instagram.com/solibu_writes?igsh=MTJvZXdqMWEwdWJoeQ%3D%3D&utm_source=qr' },
@@ -74,7 +74,7 @@ export default function Footer() {
                 <a
                   key={social.label}
                   href={social.href}
-                  className="w-10 h-10 rounded-xl bg-[var(--surface-light)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/30 hover:bg-[var(--gold)]/10 transition-all"
+                  className="w-11 h-11 rounded-xl bg-[var(--surface-light)] border border-[var(--border-soft)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--gold)] hover:border-[var(--gold)]/30 hover:bg-[var(--gold)]/10 transition-all"
                   aria-label={social.label}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -97,14 +97,14 @@ export default function Footer() {
               <h4 className="font-display text-lg font-medium text-[var(--text-strong)] mb-6">
                 {group.title}
               </h4>
-              <ul className="space-y-4">
+              <ul className="flex flex-wrap gap-x-6 gap-y-2 sm:flex-col sm:gap-y-4">
                 {group.links.map((link) => (
                   <li key={link.to}>
                     <Link
                       to={link.to}
                       className="text-[var(--text-muted)] hover:text-[var(--gold)] transition-colors text-sm inline-flex items-center gap-2 group"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)]/0 group-hover:bg-[var(--gold)] transition-all" />
+                      <span className="hidden sm:inline-flex w-1.5 h-1.5 rounded-full bg-[var(--gold)]/0 group-hover:bg-[var(--gold)] transition-all" />
                       {link.label}
                     </Link>
                   </li>
@@ -121,7 +121,7 @@ export default function Footer() {
             <ul className="space-y-5">
               <li>
                 <a href="mailto:abodunrinoluwanifemi116@gmail.com" className="flex items-start gap-3 group">
-                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--gold)]/20 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0 mt-1 group-hover:bg-[var(--gold)]/20 transition-colors">
                     <Mail className="w-4 h-4 text-[var(--gold)]" />
                   </div>
                   <div>
@@ -132,7 +132,7 @@ export default function Footer() {
               </li>
               <li>
                 <a href="tel:+2349047651145" className="flex items-start gap-3 group">
-                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--gold)]/20 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0 mt-1 group-hover:bg-[var(--gold)]/20 transition-colors">
                     <Phone className="w-4 h-4 text-[var(--gold)]" />
                   </div>
                   <div>
@@ -143,11 +143,11 @@ export default function Footer() {
               </li>
               <li>
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center flex-shrink-0 mt-1">
                     <MapPin className="w-4 h-4 text-[var(--gold)]" />
                   </div>
                   <div>
-                    <p className="text-[var(--text-soft)] text-sm">19 babatunde odusiji street</p>
+                    <p className="text-[var(--text-soft)] text-sm break-words">19 babatunde odusiji street</p>
                     <p className="text-[var(--text-muted)] text-xs mt-0.5">sango ota, Ogun state, Nigeria</p>
                   </div>
                 </div>
