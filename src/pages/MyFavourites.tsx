@@ -109,7 +109,7 @@ export default function MyFavourites() {
                     </Link>
                     <button
                       onClick={() => handleUnfavourite(book._id)}
-                      className="absolute top-3 right-3 p-2 bg-[var(--color-bg)]/80 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-500/20 transition-colors opacity-0 group-hover:opacity-100"
+                      className="absolute top-3 right-3 p-2 bg-[var(--color-bg)]/80 backdrop-blur-sm rounded-full text-red-500 hover:bg-red-500/20 transition-colors opacity-100 sm:opacity-0 group-hover:sm:opacity-100"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

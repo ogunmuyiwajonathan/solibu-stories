@@ -21,7 +21,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Search novel
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A88F6C] hover:text-[#F4E8D5] transition-colors"
+          className="absolute right-4 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#A88F6C] hover:text-[#F4E8D5] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -29,4 +29,5 @@ export default function SearchBar({ value, onChange, placeholder = 'Search novel
     </div>
   );
 }
+
 

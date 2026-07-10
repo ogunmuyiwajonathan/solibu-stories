@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { SignUp } from '@clerk/react';
 
 export default function SignUpPage() {
@@ -27,7 +27,7 @@ export default function SignUpPage() {
             >
               <div className="inline-flex items-center gap-3 mb-8">
                 <div className="p-3 rounded-2xl bg-[var(--gold)]/10 border border-[var(--gold)]/20">
-                  <BookOpen className="w-8 h-8 text-[var(--gold)]" />
+                  <img src="/images/logo.webp" alt="Solibu Stories" className="w-8 h-8 object-contain" />
                 </div>
                 <span className="font-display text-3xl font-semibold text-[var(--text-strong)] tracking-tight">
                   Solibu Stories
@@ -53,7 +53,7 @@ export default function SignUpPage() {
           >
             <div className="lg:hidden flex items-center gap-2.5 mb-10">
               <div className="p-2 rounded-xl bg-[var(--gold)]/10">
-                <BookOpen className="w-6 h-6 text-[var(--gold)]" />
+                <img src="/images/logo.webp" alt="Solibu Stories" className="w-6 h-6 object-contain" />
               </div>
               <span className="font-display text-2xl font-semibold text-[var(--text-strong)] tracking-tight">
                 Solibu Stories
@@ -81,3 +81,4 @@ export default function SignUpPage() {
     </div>
   );
 }
+

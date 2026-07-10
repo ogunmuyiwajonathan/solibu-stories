@@ -132,7 +132,7 @@ export default function About() {
                 <img
                   src="/images/admin.webp"
                   alt="Founder of Solibu Stories"
-                  className="w-full h-[500px] object-cover"
+                  className="w-full h-[300px] sm:h-[400px] md:h-[500px] object-cover"
                   loading="lazy"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
@@ -141,8 +141,8 @@ export default function About() {
                 </div>
               </div>
               {/* Decorative element */}
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 border border-[var(--gold)]/20 rounded-2xl -z-10" />
-              <div className="absolute -top-4 -left-4 w-24 h-24 border border-[var(--gold)]/10 rounded-2xl -z-10" />
+              <div className="hidden sm:block absolute -bottom-4 -right-4 w-32 h-32 border border-[var(--gold)]/20 rounded-2xl -z-10" />
+              <div className="hidden sm:block absolute -top-4 -left-4 w-24 h-24 border border-[var(--gold)]/10 rounded-2xl -z-10" />
             </motion.div>
           </div>
         </div>

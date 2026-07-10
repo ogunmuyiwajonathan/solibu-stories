@@ -129,7 +129,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <p className="text-[var(--text-strong)] font-medium text-sm">{method.label}</p>
-                      <p className="text-[var(--gold)] text-sm mt-0.5">{method.value}</p>
+                      <p className="text-[var(--gold)] text-sm mt-0.5 break-all">{method.value}</p>
                       <p className="text-[var(--text-muted)] text-xs mt-1">{method.description}</p>
                     </div>
                   </motion.div>
@@ -172,7 +172,7 @@ export default function Contact() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[var(--color-surface)] rounded-2xl p-10 md:p-12 border border-[var(--border-soft)] text-center flex flex-col items-center justify-center min-h-[500px]"
+                    className="bg-[var(--color-surface)] rounded-2xl p-10 md:p-12 border border-[var(--border-soft)] text-center flex flex-col items-center justify-center min-h-[300px] md:min-h-[500px]"
                   >
                     <div className="w-20 h-20 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/20 flex items-center justify-center mb-6">
                       <CheckCircle className="w-10 h-10 text-[var(--gold)]" />

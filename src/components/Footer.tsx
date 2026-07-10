@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Mail, MapPin, Phone, ArrowRight, Heart, Instagram, Facebook, Youtube } from 'lucide-react';
 
 export default function Footer() {
@@ -47,7 +47,7 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-6">
@@ -162,7 +162,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-[var(--text-muted)] text-sm">
-              © {currentYear} Solibu Stories. All rights reserved.
+              � {currentYear} Solibu Stories. All rights reserved.
             </p>
             <div className="flex items-center gap-1 text-[var(--text-muted)] text-sm">
               <span>Crafted with</span>

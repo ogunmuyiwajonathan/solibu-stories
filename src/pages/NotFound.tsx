@@ -71,7 +71,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="relative h-screen bg-[var(--color-bg)] text-[var(--color-text)] overflow-hidden flex flex-col">
+    <div className="relative min-h-[100dvh] bg-[var(--color-bg)] text-[var(--color-text)] overflow-hidden flex flex-col">
       <Navbar />
       {/* ── Canvas noise layer ── */}
       <canvas

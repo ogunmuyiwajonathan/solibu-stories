@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDown, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
@@ -50,8 +50,8 @@ export default function Home() {
       <section className="relative min-h-[100dvh] bg-[var(--landing-bg)] text-[var(--landing-text)] flex items-center justify-center overflow-hidden">
         <ParticleScene />
 
-        {/* Floating Book Covers – decorative hero background */}
-        {/* Book 1 – top left */}
+        {/* Floating Book Covers � decorative hero background */}
+        {/* Book 1 � top left */}
         <motion.div
           initial={{ opacity: 0, x: -60, rotate: -8 }}
           animate={{ opacity: 1, x: 0, rotate: -8 }}
@@ -90,7 +90,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Book 2 – top right */}
+        {/* Book 2 � top right */}
         <motion.div
           initial={{ opacity: 0, x: 60, rotate: 9 }}
           animate={{ opacity: 1, x: 0, rotate: 9 }}
@@ -128,7 +128,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Book 3 – bottom left */}
+        {/* Book 3 � bottom left */}
         <motion.div
           initial={{ opacity: 0, x: -50, rotate: 6 }}
           animate={{ opacity: 1, x: 0, rotate: 6 }}
@@ -151,7 +151,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Book 4 – bottom right */}
+        {/* Book 4 - bottom right (desktop only) */}
         <motion.div
           initial={{ opacity: 0, x: 50, rotate: -7 }}
           animate={{ opacity: 1, x: 0, rotate: -7 }}
@@ -172,52 +172,142 @@ export default function Home() {
           >
             <img src="/images/book1.webp" alt="Book 1" loading="eager" fetchPriority="high" style={{ width: "100%", height: 170, objectFit: "cover", display: "block" }} />
           </motion.div>
+        </motion.div>
 
-        {/* Mobile-only floating books (visible < md) */}
+        {/* Mobile-only floating books (visible < md) - standalone */}
         <motion.div
           initial={{ opacity: 0, x: -30, rotate: -5 }}
-          animate={{ opacity: 0.65, x: 0, rotate: -5 }}
+          animate={{ opacity: 1, x: 0, rotate: -5 }}
           transition={{ duration: 0.8, delay: 0.5 }}
           className="absolute block md:hidden"
-          style={{ left: "2%", top: "6%", zIndex: 2 }}
+          style={{ left: "2%", top: "6%", zIndex: 5 }}
         >
           <motion.div
-            animate={{ y: [0, -8, 0], rotate: [-5, -3, -5] }}
+            animate={{ y: [0, -10, 0], rotate: [-5, -3, -5] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             style={{
-              width: 55,
-              borderRadius: 4,
+              width: 85,
+              borderRadius: 5,
               overflow: "hidden",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
               border: "1px solid rgba(212,175,55,0.25)",
             }}
           >
-            <img src="/images/book1.webp" alt="" loading="eager" fetchPriority="high" style={{ width: "100%", height: 82, objectFit: "cover", display: "block" }} />
+            <img src="/images/book1.webp" alt="" loading="eager" fetchPriority="high" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
           </motion.div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, x: 30, rotate: 7 }}
-          animate={{ opacity: 0.65, x: 0, rotate: 7 }}
+          animate={{ opacity: 1, x: 0, rotate: 7 }}
           transition={{ duration: 0.8, delay: 0.7 }}
           className="absolute block md:hidden"
-          style={{ right: "3%", top: "5%", zIndex: 2 }}
+          style={{ right: "3%", top: "4%", zIndex: 5 }}
         >
           <motion.div
-            animate={{ y: [0, -8, 0], rotate: [7, 9, 7] }}
+            animate={{ y: [0, -10, 0], rotate: [7, 9, 7] }}
             transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             style={{
-              width: 50,
-              borderRadius: 4,
+              width: 85,
+              borderRadius: 5,
               overflow: "hidden",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
               border: "1px solid rgba(212,175,55,0.25)",
             }}
           >
-            <img src="/images/book2.webp" alt="" loading="eager" style={{ width: "100%", height: 75, objectFit: "cover", display: "block" }} />
+            <img src="/images/book2.webp" alt="" loading="eager" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
           </motion.div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: -20, rotate: 4 }}
+          animate={{ opacity: 1, x: 0, rotate: 4 }}
+          transition={{ duration: 0.8, delay: 0.9 }}
+          className="absolute block md:hidden"
+          style={{ left: "5%", bottom: "28%", zIndex: 5 }}
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [4, 6, 4] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            style={{
+              width: 85,
+              borderRadius: 5,
+              overflow: "hidden",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              border: "1px solid rgba(212,175,55,0.25)",
+            }}
+          >
+            <img src="/images/book3.webp" alt="" loading="lazy" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
+          </motion.div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20, rotate: -6 }}
+          animate={{ opacity: 1, x: 0, rotate: -6 }}
+          transition={{ duration: 0.8, delay: 1.1 }}
+          className="absolute block md:hidden"
+          style={{ right: "4%", bottom: "22%", zIndex: 5 }}
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [-6, -4, -6] }}
+            transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+            style={{
+              width: 85,
+              borderRadius: 5,
+              overflow: "hidden",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              border: "1px solid rgba(212,175,55,0.25)",
+            }}
+          >
+            <img src="/images/book1.webp" alt="" loading="lazy" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
+          </motion.div>
+        </motion.div>
+
+
+        <motion.div
+          initial={{ opacity: 0, x: -20, rotate: 4 }}
+          animate={{ opacity: 1, x: 0, rotate: 4 }}
+          transition={{ duration: 0.8, delay: 0.9 }}
+          className="absolute block md:hidden"
+          style={{ left: "5%", bottom: "28%", zIndex: 5 }}
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [4, 6, 4] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            style={{
+              width: 85,
+              borderRadius: 5,
+              overflow: "hidden",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              border: "1px solid rgba(212,175,55,0.25)",
+            }}
+          >
+            <img src="/images/book3.webp" alt="" loading="lazy" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20, rotate: -6 }}
+          animate={{ opacity: 1, x: 0, rotate: -6 }}
+          transition={{ duration: 0.8, delay: 1.1 }}
+          className="absolute block md:hidden"
+          style={{ right: "4%", bottom: "22%", zIndex: 5 }}
+        >
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [-6, -4, -6] }}
+            transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+            style={{
+              width: 85,
+              borderRadius: 5,
+              overflow: "hidden",
+              boxShadow: "0 15px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.2)",
+              border: "1px solid rgba(212,175,55,0.25)",
+            }}
+          >
+            <img src="/images/book1.webp" alt="" loading="lazy" style={{ width: "100%", height: 125, objectFit: "cover", display: "block" }} />
+          </motion.div>
+        </motion.div>
+
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-28 md:py-32 text-center">
           <motion.div
@@ -283,35 +373,35 @@ export default function Home() {
 
       <section className="relative section-padding overflow-hidden" style={{ background: "linear-gradient(180deg, #07040200 0%, #0d0804 8%, #100905 30%, #150c07 50%, #100905 72%, #0d0804 92%, #07040200 100%)" }}>
 
-        {/* ── Layer 1: Deep dark radial base ── */}
+        {/* -- Layer 1: Deep dark radial base -- */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 50%, #1c1005 0%, #0a0603 60%, transparent 100%)" }} />
 
-        {/* ── Layer 2: Aurora bloom glows ── */}
+        {/* -- Layer 2: Aurora bloom glows -- */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Amber primary bloom – left */}
+          {/* Amber primary bloom � left */}
           <div className="absolute" style={{ top: "15%", left: "-5%", width: "55%", height: "70%", background: "radial-gradient(ellipse at center, rgba(212,175,55,0.10) 0%, rgba(170,126,45,0.05) 40%, transparent 70%)", filter: "blur(60px)" }} />
-          {/* Copper secondary bloom – right */}
+          {/* Copper secondary bloom � right */}
           <div className="absolute" style={{ top: "10%", right: "-8%", width: "50%", height: "75%", background: "radial-gradient(ellipse at center, rgba(200,120,60,0.08) 0%, rgba(160,90,30,0.04) 45%, transparent 72%)", filter: "blur(80px)" }} />
-          {/* Crimson ember accent – bottom center */}
+          {/* Crimson ember accent � bottom center */}
           <div className="absolute" style={{ bottom: "-10%", left: "50%", transform: "translateX(-50%)", width: "60%", height: "50%", background: "radial-gradient(ellipse at center, rgba(180,60,30,0.06) 0%, rgba(120,40,20,0.03) 50%, transparent 75%)", filter: "blur(100px)" }} />
-          {/* Cold indigo counter-light – top */}
+          {/* Cold indigo counter-light � top */}
           <div className="absolute" style={{ top: "-8%", left: "50%", transform: "translateX(-50%)", width: "70%", height: "40%", background: "radial-gradient(ellipse at center, rgba(80,60,160,0.04) 0%, transparent 70%)", filter: "blur(80px)" }} />
         </div>
 
-        {/* ── Layer 3: Subtle grid texture ── */}
+        {/* -- Layer 3: Subtle grid texture -- */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.025]" style={{ backgroundImage: "linear-gradient(rgba(212,175,55,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.6) 1px, transparent 1px)", backgroundSize: "64px 64px" }} />
 
-        {/* ── Layer 4: Vignette border ── */}
+        {/* -- Layer 4: Vignette border -- */}
         <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: "inset 0 0 120px 40px rgba(4,2,1,0.85)" }} />
 
-        {/* ── Layer 5: Golden hairline separators ── */}
+        {/* -- Layer 5: Golden hairline separators -- */}
         <div className="absolute top-0 left-0 right-0 h-px pointer-events-none" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.0) 10%, rgba(212,175,55,0.35) 40%, rgba(249,229,150,0.55) 50%, rgba(212,175,55,0.35) 60%, rgba(212,175,55,0.0) 90%, transparent 100%)" }} />
         <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.0) 10%, rgba(212,175,55,0.35) 40%, rgba(249,229,150,0.55) 50%, rgba(212,175,55,0.35) 60%, rgba(212,175,55,0.0) 90%, transparent 100%)" }} />
 
-        {/* ── Layer 6: Rich multi-tier particle system ── */}
+        {/* -- Layer 6: Rich multi-tier particle system -- */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
 
-          {/* Tier A – Micro sparkles (1px, fast twinkle, 25 particles) */}
+          {/* Tier A � Micro sparkles (1px, fast twinkle, 25 particles) */}
           {[
             { l:"3%",  t:"12%", dur:2.1, del:0.0 }, { l:"9%",  t:"44%", dur:1.8, del:0.4 },
             { l:"14%", t:"71%", dur:2.5, del:1.1 }, { l:"19%", t:"28%", dur:1.6, del:0.7 },
@@ -339,7 +429,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier B – Glowing orbs (3–5px, drift up, soft glow, 20 particles) */}
+          {/* Tier B � Glowing orbs (3�5px, drift up, soft glow, 20 particles) */}
           {[
             { w:3, l:"6%",  t:"25%", dur:6,  del:0.0, op:0.55 }, { w:4, l:"12%", t:"70%", dur:8,  del:1.3, op:0.40 },
             { w:3, l:"21%", t:"45%", dur:7,  del:0.6, op:0.50 }, { w:5, l:"29%", t:"15%", dur:9,  del:2.1, op:0.30 },
@@ -365,7 +455,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier C – Soft nebula puffs (8–18px, very blurred, slow pulse, 10 particles) */}
+          {/* Tier C � Soft nebula puffs (8�18px, very blurred, slow pulse, 10 particles) */}
           {[
             { w:14, l:"10%", t:"30%", dur:12, del:0, op:0.12 },   { w:18, l:"30%", t:"70%", dur:15, del:2, op:0.09 },
             { w:12, l:"50%", t:"20%", dur:11, del:1, op:0.11 },   { w:16, l:"70%", t:"60%", dur:14, del:3, op:0.08 },
@@ -385,7 +475,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier D – Ember streaks (thin rising lines, 8 particles) */}
+          {/* Tier D � Ember streaks (thin rising lines, 8 particles) */}
           {[
             { l:"11%", t:"60%", dur:4, del:0.0 }, { l:"23%", t:"75%", dur:5, del:1.5 },
             { l:"43%", t:"65%", dur:3.5, del:0.7 }, { l:"61%", t:"80%", dur:4.5, del:2.0 },
@@ -405,7 +495,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* ── Layer 7: Diagonal ink-wisp lines ── */}
+        {/* -- Layer 7: Diagonal ink-wisp lines -- */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.06]">
           {[15, 35, 55, 75].map((deg, i) => (
             <div key={i} className="absolute" style={{ top: `${10 + i * 22}%`, left: "-20%", width: "140%", height: "1px", background: "linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.8) 30%, rgba(249,229,150,1) 50%, rgba(212,175,55,0.8) 70%, transparent 100%)", transform: `rotate(${deg - 30}deg)`, transformOrigin: "center" }} />
@@ -413,7 +503,7 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* ── Ornate Header ── */}
+          {/* -- Ornate Header -- */}
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
 
             {/* Decorative ornament */}
@@ -457,7 +547,7 @@ export default function Home() {
               Featured Collection
             </motion.span>
 
-            {/* Heading – word-by-word stagger */}
+            {/* Heading � word-by-word stagger */}
             <div className="overflow-hidden mb-4 sm:mb-5">
               <motion.h2
                 initial={{ opacity: 0, y: 40 }}
@@ -602,7 +692,7 @@ export default function Home() {
               to="/library"
               className="text-[var(--color-accent)] font-medium text-sm hover:underline hidden sm:block flex-shrink-0"
             >
-              View All →
+              View All ?
             </Link>
           </div>
 

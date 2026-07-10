@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen,
   LayoutDashboard,
   Library,
   PlusCircle,
@@ -54,7 +53,7 @@ export default function AdminLayout() {
       >
         <div className="p-6 border-b border-[var(--border-soft)]">
           <Link to="/" className="flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-[var(--gold)]" />
+            <img src="/images/logo.webp" alt="Solibu Stories" className="w-6 h-6 object-contain" />
             <span className="font-display text-lg font-semibold text-[var(--text-strong)]">
               Solibu Stories
             </span>
@@ -108,7 +107,7 @@ export default function AdminLayout() {
           <span className="font-display text-lg font-semibold text-[var(--text-strong)]">Admin</span>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 text-[var(--text-muted)] hover:text-[var(--text-strong)]"
+            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-strong)]"
           >
             {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -121,3 +120,6 @@ export default function AdminLayout() {
     </div>
   );
 }
+
+
+
