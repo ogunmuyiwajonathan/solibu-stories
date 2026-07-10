@@ -13,7 +13,7 @@ dist-ssr
 *.local
 
 # Convex generated
-convex/_generated
+# convex/_generated — needed for Vercel build
 
 # Environment files
 .env
