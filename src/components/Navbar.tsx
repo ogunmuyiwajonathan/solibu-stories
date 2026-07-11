@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, LogIn, Heart, User, LogOut } from 'lucide-react';
@@ -97,11 +97,18 @@ export default function Navbar() {
             })}
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-3">
             {!isLoaded ? (
               <div className={`w-9 h-9 rounded-full ${isDarkBg ? 'bg-white/10' : 'bg-[var(--color-border)]/50'} animate-pulse`} />
             ) : isSignedIn && user ? (
-              <UserButton />
+              <>
+                <span className={`text-sm font-medium tracking-wide ${
+                  isDarkBg ? 'text-white/70' : 'text-[var(--color-muted)]'
+                }`}>
+                  {user.firstName || user.username || user.primaryEmailAddress?.emailAddress || ''}
+                </span>
+                <UserButton />
+              </>
             ) : (
               <Link
                 to="/signin"
@@ -116,7 +123,6 @@ export default function Navbar() {
               </Link>
             )}
           </div>
-
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden p-3 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${
@@ -128,7 +134,6 @@ export default function Navbar() {
           </button>
         </div>
       </div>
-
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -189,3 +194,4 @@ export default function Navbar() {
     </motion.nav>
   );
 }
+
