@@ -1,18 +1,13 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { requireAdmin } from "./helpers";
+import { requireAdmin, ADMIN_EMAILS } from "./helpers";
 
 export const isAdmin = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    const email = identity?.email;
-    if (!email) return false;
-    const admin = await ctx.db
-      .query("admin_users")
-      .withIndex("by_email", (q) => q.eq("email", email.toLowerCase()))
-      .first();
-    return admin !== null;
+    const email = identity?.email?.toLowerCase();
+    return email ? ADMIN_EMAILS.includes(email) : false;
   },
 });
 

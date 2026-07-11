@@ -1,5 +1,10 @@
 import type { QueryCtx, MutationCtx } from "./_generated/server";
 
+export const ADMIN_EMAILS = [
+  "abodunrinoluwanifemi116@gmail.com",
+  "ogunmuyiwajonathan@gmail.com",
+];
+
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -10,16 +15,9 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx) {
 
 export async function requireAdmin(ctx: MutationCtx) {
   const identity = await requireAuth(ctx);
-  const email = identity.email;
-  if (!email) {
-    throw new Error("Email not available — cannot verify admin");
-  }
-  const admin = await ctx.db
-    .query("admin_users")
-    .withIndex("by_email", (q) => q.eq("email", email.toLowerCase()))
-    .first();
-  if (!admin) {
+  const email = identity.email?.toLowerCase();
+  if (!email || !ADMIN_EMAILS.includes(email)) {
     throw new Error("Not authorized — admin only");
   }
-  return { identity, admin };
+  return { identity };
 }
