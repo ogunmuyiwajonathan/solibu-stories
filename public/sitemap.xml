@@ -10,18 +10,36 @@
     <loc>https://solibu-stories.vercel.app/library</loc>
     <lastmod>2026-07-12</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://solibu-stories.vercel.app/about</loc>
     <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://solibu-stories.vercel.app/contact</loc>
     <lastmod>2026-07-12</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://solibu-stories.vercel.app/book/js76zhm8dmrc04zvevj6ry1yr588j8ky</loc>
+    <lastmod>2026-06-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://solibu-stories.vercel.app/book/js70bktppwsse04add5gqqpdyx88jn94</loc>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://solibu-stories.vercel.app/book/js7fy8dez5xajkrar0yk1yd66h88j01j</loc>
+    <lastmod>2026-06-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>
