@@ -15,6 +15,7 @@ export const loginWithGoogle = action({
 
     const payload: Record<string, any> = await res.json();
     const email: string | undefined = payload.email?.toLowerCase();
+    const picture: string | undefined = payload.picture;
 
     if (!email || payload.email_verified !== "true" || !ADMIN_EMAILS.includes(email)) {
       throw new Error("Not authorized - admin only");
@@ -33,7 +34,7 @@ export const loginWithGoogle = action({
       expires_at: now + 7 * 24 * 60 * 60 * 1000,
     });
 
-    return { sessionToken, email };
+    return { sessionToken, email, picture };
   },
 });
 

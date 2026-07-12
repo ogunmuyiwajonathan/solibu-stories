@@ -53,12 +53,14 @@ function AdminLoginInner() {
         } else {
           localStorage.removeItem('admin_session_token');
           localStorage.removeItem('admin_email');
+          localStorage.removeItem('admin_picture');
           setIsChecking(false);
         }
       })
       .catch(() => {
         localStorage.removeItem('admin_session_token');
         localStorage.removeItem('admin_email');
+        localStorage.removeItem('admin_picture');
         setIsChecking(false);
       });
   }, [navigate, convex]);
@@ -72,6 +74,7 @@ function AdminLoginInner() {
       });
       localStorage.setItem('admin_session_token', result.sessionToken);
       localStorage.setItem('admin_email', result.email);
+      localStorage.setItem('admin_picture', result.picture ?? '');
       navigate('/admin', { replace: true });
     } catch (err: any) {
       const msg = err?.message || 'Authentication failed. Please try again.';

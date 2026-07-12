@@ -30,6 +30,9 @@ export default function AdminLayout() {
   const [email] = useState<string | null>(() =>
     localStorage.getItem('admin_email')
   );
+  const [picture] = useState<string | null>(() =>
+    localStorage.getItem('admin_picture')
+  );
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Close sidebar on route change (mobile)
@@ -49,6 +52,7 @@ export default function AdminLayout() {
     } finally {
       localStorage.removeItem('admin_session_token');
       localStorage.removeItem('admin_email');
+      localStorage.removeItem('admin_picture');
       setIsSigningOut(false);
       navigate('/admin/login', { replace: true });
     }
@@ -78,15 +82,25 @@ export default function AdminLayout() {
         {/* Sidebar Header */}
         <div className="p-6 border-b border-zinc-800">
           <div className="flex items-center justify-between">
-            <Link to="/admin" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-zinc-950" />
-              </div>
+            <div className="flex items-center gap-3">
+              {picture ? (
+                <img
+                  src={picture}
+                  alt="Admin"
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-amber-500/30"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-zinc-950" />
+                </div>
+              )}
               <div>
-                <h1 className="text-white font-semibold text-sm">Solibu Stories</h1>
+                <h1 className="text-white font-semibold text-sm">
+                  Hi, {email === 'ogunmuyiwajonathan@gmail.com' ? 'Dev Jonathan' : 'Author Ibukun'}
+                </h1>
                 <p className="text-zinc-500 text-xs">Admin Panel</p>
               </div>
-            </Link>
+            </div>
             <button
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden text-zinc-500 hover:text-zinc-300 transition-colors"
@@ -97,7 +111,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
             <Link
               key={item.path}
