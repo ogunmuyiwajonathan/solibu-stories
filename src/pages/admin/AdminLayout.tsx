@@ -75,7 +75,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 lg:relative lg:translate-x-0 transition-transform duration-300 flex flex-col overflow-hidden ${
+        className={`fixed top-0 left-0 bottom-0 w-72 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 transition-transform duration-300 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -149,7 +149,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
         {/* Top bar (mobile) */}
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-xl">
           <button
