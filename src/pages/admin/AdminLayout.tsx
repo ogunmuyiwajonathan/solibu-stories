@@ -75,7 +75,7 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 bottom-0 w-72 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 lg:relative lg:translate-x-0 transition-transform duration-300 flex flex-col ${
+        className={`fixed top-0 left-0 bottom-0 w-72 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800 z-50 lg:relative lg:translate-x-0 transition-transform duration-300 flex flex-col overflow-hidden ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
