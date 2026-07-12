@@ -105,7 +105,7 @@ export default function Navbar() {
                 <span className={`text-sm font-medium tracking-wide ${
                   isDarkBg ? 'text-white/70' : 'text-[var(--color-muted)]'
                 }`}>
-                  {user.firstName || user.username || user.primaryEmailAddress?.emailAddress || ''}
+                  Hi, {user.firstName || user.username || user.primaryEmailAddress?.emailAddress || ''}
                 </span>
                 <UserButton />
               </>
