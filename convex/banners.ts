@@ -37,10 +37,12 @@ export const create = mutation({
     story: v.string(),
     active: v.boolean(),
     cta_type: v.optional(v.string()),
+    session_token: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return await ctx.db.insert("banners", args);
+    const { session_token, ...bannerData } = args;
+    await requireAdmin(ctx, session_token);
+    return await ctx.db.insert("banners", bannerData);
   },
 });
 
@@ -56,19 +58,20 @@ export const update = mutation({
     story: v.optional(v.string()),
     cta_type: v.optional(v.string()),
     active: v.optional(v.boolean()),
+    session_token: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const { id, ...updates } = args;
+    const { session_token, id, ...updates } = args;
+    await requireAdmin(ctx, session_token);
     await ctx.db.patch(id, updates);
     return await ctx.db.get(id);
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("banners") },
+  args: { id: v.id("banners"), session_token: v.string() },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    await requireAdmin(ctx, args.session_token);
     await ctx.db.delete(args.id);
   },
 });

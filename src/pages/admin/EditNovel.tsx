@@ -116,6 +116,8 @@ export default function EditNovel() {
         coverUrl = url;
       }
 
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
+
       const result = await updateBook(id! as Id<"books">, {
         title: formData.title,
         author: formData.author,
@@ -126,7 +128,7 @@ export default function EditNovel() {
         featured: formData.featured,
         reading_time: formData.reading_time || undefined,
         chapters: formData.chapters ? Number(formData.chapters) : undefined,
-      });
+      }, sessionToken);
 
       if (!result) {
         setErrorMessage('Failed to update book. The database may have rejected the data.');

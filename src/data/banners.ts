@@ -55,16 +55,16 @@ export async function fetchBannerById(id: string): Promise<Banner | null> {
   return convex.query(api.banners.get, { id: id as Id<"banners"> });
 }
 
-export async function addBanner(banner: Omit<Banner, '_id' | '_creationTime'>): Promise<string> {
-  return convex.mutation(api.banners.create, banner);
+export async function addBanner(banner: Omit<Banner, '_id' | '_creationTime'>, session_token: string): Promise<string> {
+  return convex.mutation(api.banners.create, { ...banner, session_token });
 }
 
-export async function updateBanner(id: Id<"banners">, updates: Partial<Banner>): Promise<Banner | null> {
-  return convex.mutation(api.banners.update, { id, ...updates });
+export async function updateBanner(id: Id<"banners">, updates: Partial<Banner>, session_token: string): Promise<Banner | null> {
+  return convex.mutation(api.banners.update, { id, ...updates, session_token });
 }
 
-export async function deleteBanner(id: Id<"banners">): Promise<void> {
-  await convex.mutation(api.banners.remove, { id });
+export async function deleteBanner(id: Id<"banners">, session_token: string): Promise<void> {
+  await convex.mutation(api.banners.remove, { id, session_token });
 }
 
 export async function uploadBannerImage(file: File): Promise<string> {

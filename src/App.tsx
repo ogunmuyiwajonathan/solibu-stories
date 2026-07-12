@@ -1,59 +1,69 @@
 import { Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
 import { ThemeProvider } from './lib/theme';
 import ScrollToTop from './components/ScrollToTop';
-import Home from './pages/Home';
-import Library from './pages/Library';
-import BookDetail from './pages/BookDetail';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import MyFavourites from './pages/MyFavourites';
-import MyProfile from './pages/MyProfile';
-import NotFound from './pages/NotFound';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AllNovels from './pages/admin/AllNovels';
-import AddNovel from './pages/admin/AddNovel';
-import EditNovel from './pages/admin/EditNovel';
-import AllBanners from './pages/admin/AllBanners';
-import AddBanner from './pages/admin/AddBanner';
-import EditBanner from './pages/admin/EditBanner';
-import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import ProtectedRoute from './components/ProtectedRoute';
+
+const Home = lazy(() => import('./pages/Home'));
+const Library = lazy(() => import('./pages/Library'));
+const BookDetail = lazy(() => import('./pages/BookDetail'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const SignIn = lazy(() => import('./pages/SignIn'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const MyFavourites = lazy(() => import('./pages/MyFavourites'));
+const MyProfile = lazy(() => import('./pages/MyProfile'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AllNovels = lazy(() => import('./pages/admin/AllNovels'));
+const AddNovel = lazy(() => import('./pages/admin/AddNovel'));
+const EditNovel = lazy(() => import('./pages/admin/EditNovel'));
+const AllBanners = lazy(() => import('./pages/admin/AllBanners'));
+const AddBanner = lazy(() => import('./pages/admin/AddBanner'));
+const EditBanner = lazy(() => import('./pages/admin/EditBanner'));
 
 export default function App() {
   return (
     <ThemeProvider>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/library" element={<Library />} />
-        <Route path="/book/:id" element={<BookDetail />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/favourites" element={<ProtectedRoute><MyFavourites /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
+      <Suspense fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+        </div>
+      }>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/book/:id" element={<BookDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/favourites" element={<ProtectedRoute><MyFavourites /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><MyProfile /></ProtectedRoute>} />
 
-        {/* Admin Login - no protection needed */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Admin Login — no protection needed */}
+          <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* Admin Dashboard - protected, only admins can access */}
-        <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="novels" element={<AllNovels />} />
-          <Route path="novels/add" element={<AddNovel />} />
-          <Route path="novels/edit/:id" element={<EditNovel />} />
-          <Route path="banners" element={<AllBanners />} />
-          <Route path="banners/add" element={<AddBanner />} />
-          <Route path="banners/edit/:id" element={<EditBanner />} />
-        </Route>
+          {/* Admin Dashboard — protected via layout route pattern */}
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="novels" element={<AllNovels />} />
+              <Route path="novels/add" element={<AddNovel />} />
+              <Route path="novels/edit/:id" element={<EditNovel />} />
+              <Route path="banners" element={<AllBanners />} />
+              <Route path="banners/add" element={<AddBanner />} />
+              <Route path="banners/edit/:id" element={<EditBanner />} />
+            </Route>
+          </Route>
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </ThemeProvider>
   );
 }

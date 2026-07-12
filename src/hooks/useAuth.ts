@@ -1,13 +1,9 @@
 import { useCallback } from 'react';
-import { useUser, useAuth as useClerkAuth } from '@clerk/react';
-import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 export function useAuth() {
   const { isSignedIn, isLoaded, signOut: clerkSignOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
-
-  const adminRecord = useQuery(api.admin.isAdmin);
 
   const signInWithGoogle = useCallback(async () => {
     return { error: null };
@@ -29,7 +25,7 @@ export function useAuth() {
   return {
     user: clerkUser,
     session: null,
-    isAdmin: adminRecord ?? false,
+    isAdmin: false,
     isAuthenticated: isSignedIn ?? false,
     isLoading: !isLoaded,
     signInWithGoogle,

@@ -46,10 +46,12 @@ export const create = mutation({
     featured: v.boolean(),
     reading_time: v.optional(v.string()),
     chapters: v.optional(v.number()),
+    session_token: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return await ctx.db.insert("books", args);
+    const { session_token, ...bookData } = args;
+    await requireAdmin(ctx, session_token);
+    return await ctx.db.insert("books", bookData);
   },
 });
 
@@ -65,19 +67,20 @@ export const update = mutation({
     featured: v.optional(v.boolean()),
     reading_time: v.optional(v.string()),
     chapters: v.optional(v.number()),
+    session_token: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const { id, ...updates } = args;
+    const { session_token, id, ...updates } = args;
+    await requireAdmin(ctx, session_token);
     await ctx.db.patch(id, { ...updates, last_updated: Date.now() });
     return await ctx.db.get(id);
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id("books") },
+  args: { id: v.id("books"), session_token: v.string() },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    await requireAdmin(ctx, args.session_token);
     await ctx.db.delete(args.id);
   },
 });

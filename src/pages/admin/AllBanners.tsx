@@ -36,7 +36,8 @@ export default function AllBanners() {
 
   const handleDelete = async (id: Id<"banners">) => {
     if (deleteConfirm === id) {
-      await deleteBanner(id);
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
+      await deleteBanner(id, sessionToken);
       setBanners((prev) => prev.filter((b) => b._id !== id));
       setDeleteConfirm(null);
     } else {

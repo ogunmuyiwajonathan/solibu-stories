@@ -1,147 +1,177 @@
+﻿import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { SignIn, useAuth } from '@clerk/react';
-import { Navigate, Link } from 'react-router-dom';
-import { Shield, ArrowLeft, XCircle } from 'lucide-react';
-import { useQuery } from 'convex/react';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import type { CredentialResponse } from '@react-oauth/google';
+import { useConvex, useAction } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { Loader2 } from 'lucide-react';
+import { Shield, XCircle, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function AdminLogin() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const isAdmin = useQuery(api.admin.isAdmin);
-
-  // Still loading auth state
-  if (!isLoaded) {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  if (!clientId) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
-      </div>
-    );
-  }
-
-  // User is signed in - check if admin
-  if (isSignedIn) {
-    // Still checking admin status
-    if (isAdmin === undefined) {
-      return (
-        <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-[var(--gold)] animate-spin" />
-        </div>
-      );
-    }
-
-    // User IS admin - redirect to admin dashboard
-    if (isAdmin) {
-      return <Navigate to="/admin/dashboard" replace />;
-    }
-
-    // User is signed in but NOT admin - show access denied
-    return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center p-6">
-        <div className="bg-[var(--surface-strong)] border border-[var(--border-soft)] rounded-2xl p-8 text-center max-w-md">
-          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 inline-flex mb-4">
-            <XCircle className="w-8 h-8 text-red-400" />
-          </div>
-          <h1 className="font-display text-xl font-semibold text-[var(--text-strong)] mb-2">
-            Access Denied
-          </h1>
-          <p className="text-[var(--text-muted)] text-sm mb-6">
-            Your account is not authorized to access the admin panel. Only registered authors can access this area.
+      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center px-4">
+        <div className="bg-red-900/20 border border-red-800/40 rounded-2xl p-8 max-w-md text-center">
+          <XCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-300 mb-2">Configuration Error</h2>
+          <p className="text-zinc-400">
+            VITE_GOOGLE_CLIENT_ID is not set. Please configure it in the .env file.
           </p>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-[var(--gold)] hover:text-[var(--gold-soft)] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to home
-          </Link>
         </div>
       </div>
     );
   }
 
-  // User is NOT signed in - show sign in form
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
-      {/* Mobile: full-screen background image */}
-      <div className="lg:hidden fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#12101a] to-[#1a1525]" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&q=80')] bg-cover bg-center opacity-15" />
-        <div className="absolute inset-0 bg-[var(--color-bg)]/85" />
+    <GoogleOAuthProvider clientId={clientId}>
+      <AdminLoginInner />
+    </GoogleOAuthProvider>
+  );
+}
+
+function AdminLoginInner() {
+  const navigate = useNavigate();
+  const convex = useConvex();
+  const loginWithGoogle = useAction(api.admin.loginWithGoogle);
+  const [error, setError] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Check if a valid session already exists
+  useEffect(() => {
+    const token = localStorage.getItem('admin_session_token');
+    if (!token) {
+      setIsChecking(false);
+      return;
+    }
+    convex
+      .query(api.admin.isAdmin, { session_token: token })
+      .then((result) => {
+        if (result && result.isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          localStorage.removeItem('admin_session_token');
+          localStorage.removeItem('admin_email');
+          setIsChecking(false);
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('admin_session_token');
+        localStorage.removeItem('admin_email');
+        setIsChecking(false);
+      });
+  }, [navigate, convex]);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      setError(null);
+      setIsLoggingIn(true);
+      const result = await loginWithGoogle({
+        idToken: credentialResponse.credential!,
+      });
+      localStorage.setItem('admin_session_token', result.sessionToken);
+      localStorage.setItem('admin_email', result.email);
+      navigate('/admin', { replace: true });
+    } catch (err: any) {
+      const msg = err?.message || 'Authentication failed. Please try again.';
+      if (msg.includes('not authorized') || msg.includes('Access denied')) {
+        setError('Access denied. This Google account is not authorized as an admin.');
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="flex min-h-screen relative z-10">
-        {/* Desktop left panel */}
-        <div className="hidden lg:flex lg:w-1/2 h-screen sticky top-0 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0f] via-[#12101a] to-[#1a1525]" />
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1200&q=80')] bg-cover bg-center opacity-15" />
-          <div className="relative z-10 flex flex-col items-center justify-center w-full p-12">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-center max-w-md"
-            >
-              <div className="inline-flex items-center gap-3 mb-4">
-                <div className="p-3 rounded-2xl bg-[var(--gold)]/10 border border-[var(--gold)]/20">
-                  <Shield className="w-8 h-8 text-[var(--gold)]" />
-                </div>
-                <span className="font-display text-3xl font-semibold text-[var(--text-strong)] tracking-tight">
-                  Author Portal
-                </span>
-              </div>
-              <div className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full bg-[var(--gold)]/10 border border-[var(--gold)]/25">
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--gold)] animate-pulse" />
-                <span className="text-[var(--gold)] text-xs font-medium uppercase tracking-widest">
-                  Strictly for Authors
-                </span>
-              </div>
-              <h2 className="font-display text-4xl font-medium text-[var(--text-strong)] leading-tight mb-4">
-                Your workspace awaits
-              </h2>
-              <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-                Publish stories, track readership, and manage your portfolio from a single dashboard.
-              </p>
-            </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative w-full max-w-md"
+      >
+        {/* Back link */}
+        <button
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors mb-8 text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to site
+        </button>
+
+        {/* Card */}
+        <div className="bg-zinc-900/60 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 shadow-2xl">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <Shield className="w-8 h-8 text-zinc-950" />
+            </div>
           </div>
-        </div>
 
-        {/* Right panel - sign in form */}
-        <div className="w-full lg:w-1/2 h-screen overflow-y-auto flex items-start justify-center py-8 px-6 sm:px-12">
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="w-full max-w-md"
-          >
-            <div className="lg:hidden flex items-center gap-2.5 mb-10">
-              <div className="p-2 rounded-xl bg-[var(--gold)]/10">
-                <Shield className="w-6 h-6 text-[var(--gold)]" />
+          <h1 className="text-2xl font-bold text-white text-center mb-2">
+            Admin Access
+          </h1>
+          <p className="text-zinc-400 text-center text-sm mb-8">
+            Sign in with your authorized Google account to manage the library.
+          </p>
+
+          {/* Error */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-900/20 border border-red-800/40 rounded-xl p-4 mb-6 flex items-start gap-3"
+            >
+              <XCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-red-300 text-sm font-medium">Access Denied</p>
+                <p className="text-red-400/80 text-xs mt-1">{error}</p>
               </div>
-              <span className="font-display text-2xl font-semibold text-[var(--text-strong)] tracking-tight">
-                Author Portal
-              </span>
-            </div>
+            </motion.div>
+          )}
 
-            {/* 
-              IMPORTANT: signUpUrl is intentionally omitted.
-              Only existing accounts can sign in here.
-              New accounts must be created manually in Clerk dashboard.
-            */}
-            <SignIn 
-              routing="hash" 
-              fallbackRedirectUrl="/admin" 
-            />
+          {/* Google Sign In */}
+          <div className="flex justify-center">
+            {isLoggingIn ? (
+              <div className="flex items-center gap-3 px-6 py-3 bg-white/5 rounded-xl">
+                <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+                <span className="text-zinc-400 text-sm">Verifying...</span>
+              </div>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google sign-in failed. Please try again.')}
+                theme="outline"
+                size="large"
+                text="signin_with"
+                shape="pill"
+                width={300}
+              />
+            )}
+          </div>
 
-            <div className="mt-8 text-center">
-              <Link to="/signin" className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-soft)] transition-colors">
-                <ArrowLeft className="w-4 h-4" />
-                Back to regular sign in
-              </Link>
-            </div>
-          </motion.div>
+          <p className="text-zinc-600 text-xs text-center mt-6">
+            Only authorized admin accounts can access this area.
+          </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

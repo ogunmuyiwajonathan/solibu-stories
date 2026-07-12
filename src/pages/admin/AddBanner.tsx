@@ -99,6 +99,7 @@ export default function AddBanner() {
       }
 
       setUploadProgress('Saving banner...');
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
       const result = await addBanner({
         image_url: finalImageUrl,
         label: formData.label,
@@ -109,7 +110,7 @@ export default function AddBanner() {
         story: formData.story,
         active: formData.active,
         cta_type: formData.cta_type,
-      });
+      }, sessionToken);
 
       if (!result) {
         setErrorMessage('Failed to save banner.');

@@ -66,16 +66,16 @@ export async function getBookById(id: string): Promise<Book | null> {
   return convex.query(api.books.get, { id: id as Id<"books"> });
 }
 
-export async function addBook(book: Omit<Book, '_id' | '_creationTime'>): Promise<string> {
-  return convex.mutation(api.books.create, book);
+export async function addBook(book: Omit<Book, '_id' | '_creationTime'>, session_token: string): Promise<string> {
+  return convex.mutation(api.books.create, { ...book, session_token });
 }
 
-export async function updateBook(id: Id<"books">, updates: Partial<Book>): Promise<Book | null> {
-  return convex.mutation(api.books.update, { id, ...updates });
+export async function updateBook(id: Id<"books">, updates: Partial<Book>, session_token: string): Promise<Book | null> {
+  return convex.mutation(api.books.update, { id, ...updates, session_token });
 }
 
-export async function deleteBook(id: Id<"books">): Promise<void> {
-  await convex.mutation(api.books.remove, { id });
+export async function deleteBook(id: Id<"books">, session_token: string): Promise<void> {
+  await convex.mutation(api.books.remove, { id, session_token });
 }
 
 export async function uploadCover(file: File): Promise<string> {

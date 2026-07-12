@@ -49,4 +49,11 @@ export default defineSchema({
     email: v.string(),
   }).index("by_user_id", ["user_id"])
     .index("by_email", ["email"]),
+
+  adminSessions: defineTable({
+    session_token: v.string(),
+    email: v.string(),
+    created_at: v.number(),
+    expires_at: v.number(),
+  }).index("by_session_token", ["session_token"]),
 });

@@ -1,54 +1,87 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin, ADMIN_EMAILS } from "./helpers";
+import { internal } from "./_generated/api";
 
-export const isAdmin = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const email = identity?.email?.toLowerCase();
-    return email ? ADMIN_EMAILS.includes(email) : false;
-  },
-});
-
-export const getAdminByEmail = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("admin_users")
-      .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase()))
-      .first();
-  },
-});
-
-export const addAdmin = mutation({
+export const loginWithGoogle = action({
   args: {
-    user_id: v.string(),
-    email: v.string(),
+    idToken: v.string(),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const res = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${args.idToken}`
+    );
+    if (!res.ok) throw new Error("Invalid Google token");
 
-    const existing = await ctx.db
-      .query("admin_users")
-      .withIndex("by_user_id", (q) => q.eq("user_id", args.user_id))
-      .first();
+    const payload: Record<string, any> = await res.json();
+    const email: string | undefined = payload.email?.toLowerCase();
 
-    if (existing) {
-      return existing._id;
+    if (!email || payload.email_verified !== "true" || !ADMIN_EMAILS.includes(email)) {
+      throw new Error("Not authorized - admin only");
     }
 
-    return await ctx.db.insert("admin_users", {
-      user_id: args.user_id,
-      email: args.email.toLowerCase(),
+    if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+      throw new Error("Token was not issued for this application");
+    }
+
+    const sessionToken = crypto.randomUUID();
+    const now = Date.now();
+    await ctx.runMutation(internal.admin._createSession, {
+      session_token: sessionToken,
+      email,
+      created_at: now,
+      expires_at: now + 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { sessionToken, email };
+  },
+});
+
+export const _createSession = internalMutation({
+  args: {
+    session_token: v.string(),
+    email: v.string(),
+    created_at: v.number(),
+    expires_at: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert("adminSessions", {
+      session_token: args.session_token,
+      email: args.email,
+      created_at: args.created_at,
+      expires_at: args.expires_at,
     });
   },
 });
 
-export const removeAdmin = mutation({
-  args: { id: v.id("admin_users") },
+export const isAdmin = query({
+  args: { session_token: v.string() },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    await ctx.db.delete(args.id);
+    const session = await ctx.db
+      .query("adminSessions")
+      .withIndex("by_session_token", (q) => q.eq("session_token", args.session_token))
+      .first();
+
+    if (!session || session.expires_at < Date.now()) {
+      return { isAdmin: false, email: null };
+    }
+
+    return { isAdmin: true, email: session.email };
+  },
+});
+
+export const logout = mutation({
+  args: { session_token: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx, args.session_token);
+
+    const session = await ctx.db
+      .query("adminSessions")
+      .withIndex("by_session_token", (q) => q.eq("session_token", args.session_token))
+      .first();
+
+    if (session) {
+      await ctx.db.delete(session._id);
+    }
   },
 });

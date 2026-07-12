@@ -35,7 +35,8 @@ export default function AllNovels() {
 
   const handleDelete = async (id: Id<"books">) => {
     if (deleteConfirm === id) {
-      await deleteBook(id);
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
+      await deleteBook(id, sessionToken);
       setBooks((prev) => prev.filter((b) => b._id !== id));
       setDeleteConfirm(null);
     } else {

@@ -117,6 +117,7 @@ export default function EditBanner() {
         finalImageUrl = url;
       }
 
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
       const result = await updateBanner(id! as Id<"banners">, {
         image_url: finalImageUrl,
         label: formData.label,
@@ -127,7 +128,7 @@ export default function EditBanner() {
         story: formData.story,
         active: formData.active,
         cta_type: formData.cta_type,
-      });
+      }, sessionToken);
 
       if (!result) {
         setErrorMessage('Failed to update banner.');

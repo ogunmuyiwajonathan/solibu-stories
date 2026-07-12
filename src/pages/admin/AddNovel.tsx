@@ -98,6 +98,7 @@ export default function AddNovel() {
       }
 
       setUploadProgress('Saving book...');
+      const sessionToken = localStorage.getItem('admin_session_token') || '';
       const result = await addBook({
         title: formData.title,
         author: formData.author,
@@ -109,9 +110,9 @@ export default function AddNovel() {
         featured: formData.featured,
         reading_time: formData.reading_time || undefined,
         chapters: formData.chapters ? Number(formData.chapters) : undefined,
-      });
-
-      if (!result) {
+      }, sessionToken);
+ 
+       if (!result) {
         setErrorMessage('Failed to save book. The database may have rejected the data.');
         setIsSaving(false);
         setUploadProgress('');
