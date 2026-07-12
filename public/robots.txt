@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://solibu-stories.vercel.app/sitemap.xml
