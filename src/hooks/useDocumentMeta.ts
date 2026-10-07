@@ -5,6 +5,37 @@ const DEFAULT_DESCRIPTION =
   'Explore a curated library of captivating stories. Read online, track your progress, and discover your next adventure.';
 
 /**
+ * Points `<link rel="canonical">` and `og:url` at the route currently displayed.
+ *
+ * index.html serves every route, so a canonical baked into it would claim that
+ * `/library` and every `/book/:id` are duplicates of the homepage — telling
+ * search engines to fold those pages into `/`, which directly contradicts the
+ * sitemap that lists them as distinct. A wrong canonical is worse than none, so
+ * the tag is created here rather than hardcoded.
+ *
+ * Query params are dropped so tracking links canonicalise to the clean URL.
+ */
+function setCanonicalUrl() {
+  const url = `${window.location.origin}${window.location.pathname}`;
+
+  let link = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+  link.setAttribute('href', url);
+
+  let ogUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+  if (!ogUrl) {
+    ogUrl = document.createElement('meta');
+    ogUrl.setAttribute('property', 'og:url');
+    document.head.appendChild(ogUrl);
+  }
+  ogUrl.setAttribute('content', url);
+}
+
+/**
  * Sets the tab title and meta description for the current page, then restores
  * the site defaults on unmount so a stale title never leaks onto the next route.
  *
@@ -16,6 +47,7 @@ const DEFAULT_DESCRIPTION =
 export function useDocumentMeta(title?: string, description?: string) {
   useEffect(() => {
     if (title) document.title = `${title} | ${DEFAULT_TITLE}`;
+    setCanonicalUrl();
     // Only touch the description when one is supplied, so a page that sets just a
     // title does not silently blank out the description inherited from index.html.
     if (description) {

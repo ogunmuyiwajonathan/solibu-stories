@@ -11,7 +11,11 @@
       name="description"
       content="Explore a curated library of captivating stories. Read online, track your progress, and discover your next adventure."
     />
-    <link rel="canonical" href="https://solibu-stories.vercel.app/" />
+    <!-- This file serves every route, so canonical and og:url are deliberately
+         absent here. A hardcoded value would claim that /library and every
+         /book/:id are duplicates of the homepage, contradicting the sitemap that
+         lists them as distinct pages. useDocumentMeta points both at the displayed
+         route instead; for scrapers that never run JS, absent beats wrong. -->
     <meta name="theme-color" content="#0A0705" />
 
     <!-- Open Graph -->
@@ -22,7 +26,6 @@
       property="og:description"
       content="Explore a curated library of captivating stories. Read online, track your progress, and discover your next adventure."
     />
-    <meta property="og:url" content="https://solibu-stories.vercel.app/" />
     <meta property="og:image" content="https://solibu-stories.vercel.app/images/logo.webp" />
 
     <!-- Twitter -->
