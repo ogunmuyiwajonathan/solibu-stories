@@ -18,6 +18,7 @@ import SearchBar from '../components/SearchBar';
 import SkeletonCard from '../components/SkeletonCard';
 import { fetchBooks, type Book } from '../data/books';
 import { fetchActiveBanners, type Banner } from '../data/banners';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 type SortOption = 'newest' | 'rating' | 'az';
 
@@ -105,6 +106,8 @@ const textItemVariants: Variants = {
 /* ───────────────────── Component ───────────────────── */
 
 export default function Library() {
+  useDocumentMeta('Library',
+    'Browse the full Solibu Stories library. Filter, sort and search captivating stories, then read online and track your progress.');
   const [books, setBooks] = useState<Book[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,17 +115,36 @@ export default function Library() {
   const [minRating, setMinRating] = useState<number>(0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadData() {
       setIsLoading(true);
-      const [booksData, bannersData] = await Promise.all([fetchBooks(), fetchActiveBanners()]);
-      setBooks(booksData);
-      setBanners(bannersData);
-      setIsLoading(false);
+      setLoadError(null);
+      try {
+        const [booksData, bannersData] = await Promise.all([
+          fetchBooks(),
+          fetchActiveBanners(),
+        ]);
+        if (cancelled) return;
+        setBooks(booksData);
+        setBanners(bannersData);
+      } catch (err) {
+        // Without this the page stayed on its loading state forever, because
+        // `setIsLoading(false)` sat after the awaited call.
+        if (cancelled) return;
+        console.error('Failed to load library data:', err);
+        setLoadError('Could not load the library. Please refresh the page.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
     loadData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredBooks = useMemo(() => {
@@ -161,12 +183,23 @@ export default function Library() {
 
   const [[currentSlide, direction], setSlideState] = useState([0, 0]);
 
-  const paginate = useCallback((newDirection: number) => {
-    setSlideState(([prev]) => [
-      (prev + newDirection + banners.length) % banners.length,
-      newDirection,
-    ]);
-  }, [banners.length]);
+  // `currentSlide` is only corrected by an effect *after* render, so a banner list
+  // that arrives late or shrinks can momentarily point past the end of the array.
+  // Falling back to index 0 keeps the render from dereferencing `undefined`.
+  const activeBanner = banners[currentSlide] ?? banners[0];
+
+  // Guard the modulo: `% 0` is `NaN`, which would produce `banners[NaN]` (undefined)
+  // and throw when the carousel is still loading or the query failed.
+  const paginate = useCallback(
+    (newDirection: number) => {
+      setSlideState(([prev]) => {
+        const length = banners.length;
+        if (length <= 0) return [prev, newDirection];
+        return [(prev + newDirection + length) % length, newDirection];
+      });
+    },
+    [banners.length]
+  );
 
   const goToSlide = useCallback((index: number) => {
     setSlideState(([prev]) => [index, index > prev ? 1 : -1]);
@@ -183,13 +216,21 @@ export default function Library() {
     [paginate]
   );
 
+  // Keep the index inside range if the banner list arrives late or shrinks.
+  useEffect(() => {
+    setSlideState(([prev, dir]) =>
+      prev >= banners.length ? [0, dir] : [prev, dir]
+    );
+  }, [banners.length]);
+
   /* Auto-play: resets whenever currentSlide changes (manual or auto) */
   useEffect(() => {
+    if (banners.length === 0) return;
     const timer = setInterval(() => {
       paginate(1);
     }, 6000);
     return () => clearInterval(timer);
-  }, [currentSlide, paginate]);
+  }, [currentSlide, paginate, banners.length]);
 
   const clearAllFilters = () => {
     setSearchQuery('');
@@ -206,11 +247,13 @@ export default function Library() {
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] selection:bg-[var(--color-accent)] selection:text-[var(--color-bg)]">
       <Navbar />
 
-      {/* Cinematic Banner Slider */}
-      {banners.length > 0 && (
+      {/* Cinematic Banner Slider — the skeleton keeps the 80dvh footprint while the
+          banner query resolves, so the grid below does not jump when it arrives. */}
+      {(isLoading || activeBanner) && (
       <section className="relative w-full min-h-[80dvh] md:h-screen overflow-hidden bg-black">
         <div className="absolute inset-0 bg-black" />
 
+        {activeBanner ? (
         <div className="relative z-10 mx-auto flex h-full min-h-[80dvh] md:min-h-screen max-w-[1700px] flex-col overflow-hidden lg:flex-row">
           <div className="relative flex-1 overflow-hidden">
             <AnimatePresence initial={false} custom={direction}>
@@ -228,11 +271,11 @@ export default function Library() {
                 className="absolute inset-0 flex h-full w-full flex-col overflow-hidden lg:flex-row"
               >
                 {/* Poster Image with Parallax */}
-                <div className="relative h-[40%] sm:h-1/2 w-full p-6 sm:p-10 overflow-hidden lg:h-full lg:w-1/2">
+                <div className="relative h-[40%] sm:h-1/2 w-full p-6 sm:p-10 overflow-hidden lg:h-full lg:w-1/2 img-shimmer">
                   <motion.img
                     custom={direction}
                     variants={imageVariants}
-                    src={banners[currentSlide].image_url}
+                    src={activeBanner.image_url}
                     alt="Cinematic reveal poster"
                     className="absolute inset-0 h-full w-full object-cover object-top"
                   />
@@ -243,7 +286,7 @@ export default function Library() {
                 <div className="relative flex w-full flex-1 flex-col justify-center px-4 sm:px-6 py-6 sm:py-10 text-white lg:w-1/2 lg:px-12 lg:py-16 lg:pt-24">
                   <div className="absolute inset-0 overflow-hidden">
                     <img
-                      src={banners[currentSlide].image_url}
+                      src={activeBanner.image_url}
                       alt=""
                       className="absolute inset-0 h-full w-full object-cover object-top scale-[1.3] blur-[50px]"
                     />
@@ -260,7 +303,7 @@ export default function Library() {
                     <div className="space-y-3 sm:space-y-5">
                       <motion.div variants={textItemVariants}>
                         <div className="inline-flex items-center rounded-full border border-[var(--color-accent)] bg-white/5 px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-accent)]">
-                          {banners[currentSlide].label}
+                          {activeBanner.label}
                         </div>
                       </motion.div>
 
@@ -269,13 +312,13 @@ export default function Library() {
                           variants={textItemVariants}
                           className="font-serif text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-tight"
                         >
-                          {banners[currentSlide].title}
+                          {activeBanner.title}
                         </motion.h1>
                         <motion.p
                           variants={textItemVariants}
                           className="text-[10px] sm:text-sm lg:text-base text-white/60 uppercase tracking-[0.24em]"
                         >
-                          {banners[currentSlide].character_name}
+                          {activeBanner.character_name}
                         </motion.p>
                       </div>
 
@@ -287,7 +330,7 @@ export default function Library() {
                         variants={textItemVariants}
                         className="max-w-xl text-xs sm:text-sm lg:text-base leading-6 sm:leading-7 text-white/70 line-clamp-2 sm:line-clamp-3"
                       >
-                        {banners[currentSlide].description}
+                        {activeBanner.description}
                       </motion.p>
                     </div>
 
@@ -295,11 +338,11 @@ export default function Library() {
                       variants={textItemVariants}
                       className="text-[10px] sm:text-sm lg:text-base text-white/60 tracking-[0.24em]"
                     >
-                      Author: {banners[currentSlide].author}
+                      Author: {activeBanner.author}
                     </motion.p>
 
                     <motion.div variants={textItemVariants} className="flex items-center justify-between gap-3">
-                      {banners[currentSlide].cta_type === 'check_out_now' ? (
+                      {activeBanner.cta_type === 'check_out_now' ? (
                         <button
                           onClick={() => document.getElementById('main-grid')?.scrollIntoView({ behavior: 'smooth' })}
                           className="inline-flex items-center justify-center rounded-full bg-[#d4af37] px-5 sm:px-8 py-2.5 sm:py-3 text-[11px] sm:text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-bg)] transition-all hover:brightness-110 whitespace-nowrap"
@@ -332,7 +375,27 @@ export default function Library() {
 
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(200,155,90,0.12),_transparent_32%)] opacity-60" />
         </div>
+        ) : (
+          /* Reserve the full banner height before the query resolves so the grid
+             below does not jump when the first slide mounts. */
+          <div className="relative z-10 mx-auto flex h-full min-h-[80dvh] md:min-h-screen max-w-[1700px] flex-col overflow-hidden lg:flex-row">
+            <div className="relative flex-1 overflow-hidden">
+              <div className="absolute inset-0 h-[40%] sm:h-1/2 w-full p-6 sm:p-10 lg:h-full lg:w-1/2">
+                <div className="h-full w-full animate-pulse rounded-2xl bg-white/[0.06]" />
+              </div>
+              <div className="relative flex w-full flex-1 flex-col justify-center gap-4 px-4 sm:px-6 py-6 sm:py-10 lg:w-1/2 lg:px-12">
+                <div className="h-4 w-24 animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-10 w-3/4 animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-4 w-full max-w-md animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-4 w-2/3 max-w-sm animate-pulse rounded bg-white/[0.06]" />
+                <div className="h-11 w-36 animate-pulse rounded-full bg-white/[0.06]" />
+              </div>
+            </div>
+          </div>
+        )}
 
+        {activeBanner && (
+        <>
         <button
           onClick={() => paginate(-1)}
           className="absolute left-3 sm:left-6 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/10 bg-black/40 p-2 sm:p-3 text-white shadow-xl backdrop-blur-md transition-colors hover:bg-white/10 focus:outline-none"
@@ -348,6 +411,8 @@ export default function Library() {
         >
           <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
+        </>
+        )}
       </section>
       )}
 
@@ -488,6 +553,27 @@ export default function Library() {
               }>
                 <SkeletonCard count={8} isDark={true} />
               </div>
+            ) : loadError ? (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                role="alert"
+                className="text-center py-16 sm:py-24 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl backdrop-blur-md px-4"
+              >
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-[var(--color-text)] mb-2">
+                  Something went wrong
+                </h3>
+                <p className="text-[var(--color-muted)] max-w-sm mx-auto text-sm sm:text-base">
+                  {loadError}
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-6 inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 min-h-[44px] bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-bg)] font-semibold rounded-full shadow-lg shadow-[var(--color-accent)]/30 transition-all transform hover:scale-105"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Try again
+                </button>
+              </motion.div>
             ) : filteredBooks.length > 0 ? (
               <motion.div
                 layout

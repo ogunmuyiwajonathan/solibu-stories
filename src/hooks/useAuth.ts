@@ -1,37 +1,20 @@
-import { useCallback } from 'react';
-import { useUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
+import { useAuth as useClerkAuth, useUser } from '@clerk/react';
 
+/**
+ * Thin wrapper over Clerk's reader-side auth.
+ *
+ * IMPORTANT: this must import from `@clerk/react`, never from `@clerk/clerk-react`.
+ * Those are two independent Clerk implementations with separate React contexts. The
+ * `ClerkProvider` in `src/main.tsx` comes from `@clerk/react`, so a hook reading the
+ * `@clerk/clerk-react` context never sees a signed-in user.
+ */
 export function useAuth() {
-  const { isSignedIn, isLoaded, signOut: clerkSignOut } = useClerkAuth();
-  const { user: clerkUser } = useUser();
-
-  const signInWithGoogle = useCallback(async () => {
-    return { error: null };
-  }, []);
-
-  const signInWithEmail = useCallback(async (_email: string, _password: string) => {
-    return { error: null };
-  }, []);
-
-  const signUpWithEmail = useCallback(async (_email: string, _password: string, _name: string) => {
-    return { error: null };
-  }, []);
-
-  const signOut = useCallback(async () => {
-    await clerkSignOut();
-    return { error: null };
-  }, [clerkSignOut]);
+  const { isSignedIn, isLoaded } = useClerkAuth();
+  const { user } = useUser();
 
   return {
-    user: clerkUser,
-    session: null,
-    isAdmin: false,
+    user,
     isAuthenticated: isSignedIn ?? false,
     isLoading: !isLoaded,
-    signInWithGoogle,
-    signInWithEmail,
-    signUpWithEmail,
-    signOut,
-    clerkUser,
   };
 }

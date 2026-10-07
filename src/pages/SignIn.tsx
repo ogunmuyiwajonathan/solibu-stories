@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { SignIn } from '@clerk/react';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 export default function SignInPage() {
+  useDocumentMeta('Sign In',
+    'Sign in to Solibu Stories to save favourites, track your reading progress and pick up where you left off.');
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       {/* Mobile: full-screen background image */}

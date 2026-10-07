@@ -2,8 +2,11 @@ import { motion } from 'framer-motion';
 import { UserProfile } from '@clerk/react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 export default function MyProfile() {
+  useDocumentMeta('My Profile',
+    'Your Solibu Stories reading profile.');
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />

@@ -7,14 +7,18 @@ import Footer from '../components/Footer';
 import ParticleScene from '../components/ParticleScene';
 import BookCard from '../components/BookCard';
 import Book3D from '../components/Book3D';
+import SkeletonCard from '../components/SkeletonCard';
 // import StatsBar from '../components/StatsBar';
 import { fetchBooks, getFeaturedBooks, type Book } from '../data/books';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 export default function Home() {
+  useDocumentMeta('Home');
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,10 +27,18 @@ export default function Home() {
         const books = await fetchBooks();
         if (cancelled) return;
         setAllBooks(books);
+      } catch (err) {
+        console.error("Failed to load books:", err);
+        // Distinguishes "the request failed" from "there really are no books",
+        // which otherwise read identically as "No stories available yet."
+        if (!cancelled) setLoadError(true);
+      }
+      try {
+        // Separate so a featured-books failure does not flag the main grid as broken.
         const featured = await getFeaturedBooks();
         if (!cancelled) setFeaturedBooks(featured);
       } catch (err) {
-        console.error("Failed to load books:", err);
+        console.error("Failed to load featured books:", err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -50,8 +62,8 @@ export default function Home() {
       <section className="relative min-h-[100dvh] bg-[var(--landing-bg)] text-[var(--landing-text)] flex items-center justify-center overflow-hidden">
         <ParticleScene />
 
-        {/* Floating Book Covers – decorative hero background */}
-        {/* Book 1 – top left */}
+        {/* Floating Book Covers â€” decorative hero background */}
+        {/* Book 1 â€” top left */}
         <motion.div
           initial={{ opacity: 0, x: -60, rotate: -8 }}
           animate={{ opacity: 1, x: 0, rotate: -8 }}
@@ -90,7 +102,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Book 2 – top right */}
+        {/* Book 2 â€” top right */}
         <motion.div
           initial={{ opacity: 0, x: 60, rotate: 9 }}
           animate={{ opacity: 1, x: 0, rotate: 9 }}
@@ -128,7 +140,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Book 3 – bottom left */}
+        {/* Book 3 â€” bottom left */}
         <motion.div
           initial={{ opacity: 0, x: -50, rotate: 6 }}
           animate={{ opacity: 1, x: 0, rotate: 6 }}
@@ -378,13 +390,13 @@ export default function Home() {
 
         {/* -- Layer 2: Aurora bloom glows -- */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Amber primary bloom – left */}
+          {/* Amber primary bloom â€” left */}
           <div className="absolute" style={{ top: "15%", left: "-5%", width: "55%", height: "70%", background: "radial-gradient(ellipse at center, rgba(212,175,55,0.10) 0%, rgba(170,126,45,0.05) 40%, transparent 70%)", filter: "blur(60px)" }} />
-          {/* Copper secondary bloom – right */}
+          {/* Copper secondary bloom â€” right */}
           <div className="absolute" style={{ top: "10%", right: "-8%", width: "50%", height: "75%", background: "radial-gradient(ellipse at center, rgba(200,120,60,0.08) 0%, rgba(160,90,30,0.04) 45%, transparent 72%)", filter: "blur(80px)" }} />
-          {/* Crimson ember accent – bottom center */}
+          {/* Crimson ember accent â€” bottom center */}
           <div className="absolute" style={{ bottom: "-10%", left: "50%", transform: "translateX(-50%)", width: "60%", height: "50%", background: "radial-gradient(ellipse at center, rgba(180,60,30,0.06) 0%, rgba(120,40,20,0.03) 50%, transparent 75%)", filter: "blur(100px)" }} />
-          {/* Cold indigo counter-light – top */}
+          {/* Cold indigo counter-light â€” top */}
           <div className="absolute" style={{ top: "-8%", left: "50%", transform: "translateX(-50%)", width: "70%", height: "40%", background: "radial-gradient(ellipse at center, rgba(80,60,160,0.04) 0%, transparent 70%)", filter: "blur(80px)" }} />
         </div>
 
@@ -401,7 +413,7 @@ export default function Home() {
         {/* -- Layer 6: Rich multi-tier particle system -- */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
 
-          {/* Tier A – Micro sparkles (1px, fast twinkle, 25 particles) */}
+          {/* Tier A â€” Micro sparkles (1px, fast twinkle, 25 particles) */}
           {[
             { l:"3%",  t:"12%", dur:2.1, del:0.0 }, { l:"9%",  t:"44%", dur:1.8, del:0.4 },
             { l:"14%", t:"71%", dur:2.5, del:1.1 }, { l:"19%", t:"28%", dur:1.6, del:0.7 },
@@ -429,7 +441,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier B – Glowing orbs (3–5px, drift up, soft glow, 20 particles) */}
+          {/* Tier B â€” Glowing orbs (3â€“5px, drift up, soft glow, 20 particles) */}
           {[
             { w:3, l:"6%",  t:"25%", dur:6,  del:0.0, op:0.55 }, { w:4, l:"12%", t:"70%", dur:8,  del:1.3, op:0.40 },
             { w:3, l:"21%", t:"45%", dur:7,  del:0.6, op:0.50 }, { w:5, l:"29%", t:"15%", dur:9,  del:2.1, op:0.30 },
@@ -455,7 +467,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier C – Soft nebula puffs (8–18px, very blurred, slow pulse, 10 particles) */}
+          {/* Tier C â€” Soft nebula puffs (8â€“18px, very blurred, slow pulse, 10 particles) */}
           {[
             { w:14, l:"10%", t:"30%", dur:12, del:0, op:0.12 },   { w:18, l:"30%", t:"70%", dur:15, del:2, op:0.09 },
             { w:12, l:"50%", t:"20%", dur:11, del:1, op:0.11 },   { w:16, l:"70%", t:"60%", dur:14, del:3, op:0.08 },
@@ -475,7 +487,7 @@ export default function Home() {
             />
           ))}
 
-          {/* Tier D – Ember streaks (thin rising lines, 8 particles) */}
+          {/* Tier D â€” Ember streaks (thin rising lines, 8 particles) */}
           {[
             { l:"11%", t:"60%", dur:4, del:0.0 }, { l:"23%", t:"75%", dur:5, del:1.5 },
             { l:"43%", t:"65%", dur:3.5, del:0.7 }, { l:"61%", t:"80%", dur:4.5, del:2.0 },
@@ -547,7 +559,7 @@ export default function Home() {
               Featured Collection
             </motion.span>
 
-            {/* Heading – word-by-word stagger */}
+            {/* Heading â€” word-by-word stagger */}
             <div className="overflow-hidden mb-4 sm:mb-5">
               <motion.h2
                 initial={{ opacity: 0, y: 40 }}
@@ -692,20 +704,36 @@ export default function Home() {
               to="/library"
               className="text-[var(--color-accent)] font-medium text-sm hover:underline hidden sm:block flex-shrink-0"
             >
-              View All ?
+              View All â†’
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-            {Array.isArray(allBooks) && allBooks.length > 0
-              ? allBooks.slice(0, 6).map((book, index) => (
-                  <BookCard key={book._id} book={book} index={index} />
-                ))
-              : !isLoading && (
-                  <p className="col-span-full text-center text-[var(--text-muted)] text-sm">
-                    No stories available yet.
-                  </p>
-                )}
+            {/* SkeletonCard returns a fragment of grid children â€” no wrapper, or
+                the skeletons would collapse into a single cell. */}
+            {isLoading ? (
+              <SkeletonCard count={6} isDark={true} />
+            ) : loadError ? (
+              <div className="col-span-full text-center py-10 bg-[var(--color-surface)] border border-[var(--border-soft)] rounded-2xl">
+                <p className="text-[var(--text-muted)] text-sm mb-4">
+                  Could not load stories.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-5 py-2.5 min-h-[44px] bg-[var(--color-accent)] text-[var(--color-bg)] font-semibold rounded-full transition-all hover:opacity-90"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : Array.isArray(allBooks) && allBooks.length > 0 ? (
+              allBooks.slice(0, 6).map((book, index) => (
+                <BookCard key={book._id} book={book} index={index} />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-[var(--text-muted)] text-sm">
+                No stories available yet.
+              </p>
+            )}
           </div>
         </div>
       </section>

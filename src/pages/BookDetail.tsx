@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Calendar, BookOpen, Loader2, Heart, ShoppingCart, Send, Trash2, Edit3 } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, BookOpen, Loader2, Heart, ShoppingCart, Send, Trash2, Edit3, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -12,6 +12,8 @@ import { useAuth } from '../hooks/useAuth';
 import { fetchFavouriteBookIds, addFavourite, removeFavourite } from '../data/favourites';
 import { fetchReviews, fetchUserReview, addReview, updateReview, deleteReview, type Review } from '../data/reviews';
 import type { Id } from '../../convex/_generated/dataModel';
+import SmartImage from '../components/SmartImage';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,7 @@ export default function BookDetail() {
   const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [book, setBook] = useState<Book | null>(null);
   const [relatedBooks, setRelatedBooks] = useState<Book[]>([]);
   const [isFav, setIsFav] = useState(false);
@@ -28,34 +31,68 @@ export default function BookDetail() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [editingReview, setEditingReview] = useState(false);
 
+  // Must sit above the `isLoading`/`!book` early returns — hooks may not be
+  // conditional. Falls back to a generic label until the record resolves.
+  useDocumentMeta(book?.title ?? 'Story');
+
   useEffect(() => {
+    let cancelled = false;
     async function loadBookData() {
       setIsLoading(true);
-      if (!id) { setIsLoading(false); return; }
-      const foundBook = await fetchBookById(id);
-      if (foundBook) {
-        setBook(foundBook);
-        setRelatedBooks(await getRelatedBooks(foundBook));
+      setLoadError(null);
+      if (!id) {
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+      try {
+        const foundBook = await fetchBookById(id);
+        if (cancelled) return;
+        if (foundBook) {
+          setBook(foundBook);
+          const related = await getRelatedBooks(foundBook);
+          if (!cancelled) setRelatedBooks(related);
+        }
+      } catch (err) {
+        // Without this, `setIsLoading(false)` sat after the awaited call and a
+        // single rejection left the page spinning forever.
+        if (cancelled) return;
+        console.error('Failed to load book:', err);
+        setLoadError('Could not load this story.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
     loadBookData();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadFavAndReviews() {
       if (!id) return;
-      if (user) {
-        const favIds = await fetchFavouriteBookIds(user.id);
-        setIsFav(favIds.includes(id));
-        const ur = await fetchUserReview(user.id, id);
-        setUserReview(ur);
-        if (ur) setReviewForm({ rating: ur.rating, content: ur.content || '' });
+      // Auxiliary data: a failure here must not block the page from rendering.
+      try {
+        if (user) {
+          const favIds = await fetchFavouriteBookIds(user.id);
+          const ur = await fetchUserReview(user.id, id);
+          if (cancelled) return;
+          setIsFav(favIds.includes(id));
+          setUserReview(ur);
+          if (ur) setReviewForm({ rating: ur.rating, content: ur.content || '' });
+        }
+        const revs = await fetchReviews(id);
+        if (!cancelled) setReviews(revs);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load reviews/favourites:', err);
       }
-      const revs = await fetchReviews(id);
-      setReviews(revs);
     }
     loadFavAndReviews();
+    return () => {
+      cancelled = true;
+    };
   }, [id, user]);
 
   const handleToggleFavourite = async () => {
@@ -123,12 +160,45 @@ export default function BookDetail() {
   }
 
   if (!book) {
+    const isError = loadError !== null;
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center">
-        <div className="text-center bg-[var(--color-surface)] p-8 rounded-2xl border border-[var(--color-accent)]/30 mx-4">
-          <h2 className="font-display text-2xl text-[var(--color-text)] mb-4">Book not found</h2>
-          <Link to="/library" className="btn-primary">Back to Library</Link>
-        </div>
+      <div className="min-h-screen bg-[var(--color-bg)]">
+        {/* Navbar + Footer: without them a dead link renders a bare card floating
+            in an empty viewport, which reads as a broken app rather than a 404. */}
+        <Navbar />
+        <main className="flex items-center justify-center px-4 py-24">
+          <div
+            role={isError ? 'alert' : undefined}
+            className="text-center bg-[var(--color-surface)] p-8 rounded-2xl border border-[var(--color-accent)]/30 max-w-md w-full"
+          >
+            <h2 className="font-display text-2xl text-[var(--color-text)] mb-2">
+              {isError ? 'Something went wrong' : 'Book not found'}
+            </h2>
+            <p className="text-[var(--color-muted)] text-sm mb-6">
+              {isError
+                ? loadError
+                : 'This story may have been removed, or the link is out of date.'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {isError && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] bg-[var(--color-accent)] text-[var(--color-bg)] font-semibold rounded-full transition-all hover:opacity-90"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Try again
+                </button>
+              )}
+              <Link
+                to="/library"
+                className="inline-flex items-center px-5 py-2.5 min-h-[44px] border border-[var(--color-border)] text-[var(--color-text)] font-semibold rounded-full transition-all hover:border-[var(--color-accent)]"
+              >
+                Back to Library
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -155,12 +225,13 @@ export default function BookDetail() {
                 transition={{ duration: 0.6 }}
                 className="aspect-[2/3] rounded-xl overflow-hidden shadow-2xl relative bg-[#0a0705]"
               >
-                <img
+                <SmartImage
                   src={book.cover_url}
                   alt={book.title}
                   className="w-full h-full object-cover"
                   width={400}
                   height={600}
+                  priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               </motion.div>

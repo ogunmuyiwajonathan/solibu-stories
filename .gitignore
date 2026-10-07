@@ -13,7 +13,7 @@ dist-ssr
 *.local
 
 # Convex generated
-# convex/_generated — needed for Vercel build
+# convex/_generated ï¿½ needed for Vercel build
 
 # Environment files
 .env
@@ -38,6 +38,11 @@ info.md
 *.mdx
 *.md
 !README.md
+!AGENTS.md
 
 # Google OAuth credentials
 client_secret_*.json
+
+# Local agent / test tooling state (not project source)
+.opencode/
+.playwright-mcp/

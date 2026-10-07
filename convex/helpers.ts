@@ -1,5 +1,6 @@
 import type { QueryCtx, MutationCtx } from "./_generated/server";
 
+/** Hardcoded admin whitelist checked by `loginWithGoogle`. */
 export const ADMIN_EMAILS = [
   "abodunrinoluwanifemi116@gmail.com",
   "ogunmuyiwajonathan@gmail.com",

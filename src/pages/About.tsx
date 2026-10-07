@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Heart, Users, Target, PenTool, Globe, Sparkles, Quote } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 const values = [
   {
@@ -34,6 +35,8 @@ const highlights = [
 ];
 
 export default function About() {
+  useDocumentMeta('About',
+    'The story behind Solibu Stories — a curated library of captivating fiction written to be read online.');
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Navbar />

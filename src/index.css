@@ -483,6 +483,80 @@
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
+/* ───────────────────────── SmartImage ─────────────────────────
+   An <img> is transparent until its bytes decode, so the shimmer can be painted
+   as the element's own background: no wrapper, no extra DOM, and the box is never
+   an empty hole. `width`/`height` (or an aspect-ratio class) reserve that box up
+   front, so the page below does not move when the real pixels arrive. */
+@keyframes smart-img-shimmer {
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+
+.smart-img {
+  display: block;
+  transition: opacity 0.4s ease;
+}
+
+.smart-img--loading {
+  background-color: var(--color-surface, #1d140d);
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(200, 155, 90, 0.14) 50%,
+    transparent 80%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: smart-img-shimmer 1.4s linear infinite;
+  /* Keep the reserved box visible before the file resolves. */
+  color: transparent;
+}
+
+/* When `--loading` is dropped, its background rules stop applying on their own,
+   so the consumer's own bg-* class is free to win. Only kill the gradient, which
+   alpha-channel images (logos, PNG covers) would otherwise let show through. */
+.smart-img--loaded {
+  animation: none;
+  background-image: none;
+}
+
+.smart-img--error {
+  animation: none;
+  background-image: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .smart-img--loading {
+    animation: none;
+    background-image: none;
+    background-color: var(--color-surface, #1d140d);
+  }
+}
+
+/* Same shimmer, for images that must stay a framer-motion component (<motion.img>)
+   and so cannot be swapped for <SmartImage>. Applied to the sized parent instead:
+ * the photo sits on top and hides it once decoded. */
+.img-shimmer {
+  background-color: var(--color-surface, #1d140d);
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(200, 155, 90, 0.14) 50%,
+    transparent 80%
+  );
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  animation: smart-img-shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .img-shimmer {
+    animation: none;
+    background-image: none;
+  }
+}
+
 /* Lost Chapter – 404 page animations */
 @keyframes dustFloat {
   0%, 100% {
@@ -731,3 +805,23 @@
 .character-eye {
   animation: blink 4s ease-in-out infinite;
 }
+
+
+/* ───────────────────────── Reduced motion ─────────────────────────
+   The app animates continuously and broadly (particles, glows, glitches,
+   carousels, entrance transitions). This is the single opt-out: CSS animations
+   and transitions are collapsed to their end state, so nothing is stuck
+   mid-transition and every element still reaches its final visible position.
+   Framer Motion drives transforms from JS rather than CSS, so it is handled
+   separately via <MotionConfig reducedMotion="user"> in src/main.tsx. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

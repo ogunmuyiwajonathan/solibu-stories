@@ -3,75 +3,70 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const imagesDir = path.resolve(__dirname, '..', 'public', 'images');
 
-// Define target max widths per image (based on usage table)
+/**
+ * Target max width (px) per source file. `null` keeps the original width.
+ *
+ * Book covers render at ~270px wide in the 4-up grid (and ~224px in list view),
+ * so 600px covers them at 2x without shipping a 1.8MB original.
+ * The Library banner is full-bleed on large screens, so posters stay uncapped.
+ */
 const maxWidthMap = {
-  'book1.jpg': 300,
-  'book2.jpg': 300,
-  'book3.jpg': 300,
-  'book4.jpg': null,  // keep original
-  'book5.jpg': null,
-  'book6.jpg': null,
-  'book7.jpg': null,
-  'book8.jpg': null,
-  'logo.png': null,   // keep original (already small)
+  'book1.jpg': 600,
+  'book2.jpg': 600,
+  'book3.jpg': 600,
+  'logo.png': 512,
   'admin.png': 600,
   'poster_adewale.jpg': null,
   'poster_falana.png': null,
   'poster_morounkeji.jpg': null,
 };
 
+const SOURCE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png']);
+
+/**
+ * Raster sources in public/images are converted to .webp and then the source is
+ * deleted (see README / AGENTS.md). This script therefore discovers whatever
+ * sources remain rather than reading a hardcoded list that goes stale.
+ */
+function findSources() {
+  if (!fs.existsSync(imagesDir)) return [];
+  return fs
+    .readdirSync(imagesDir)
+    .filter((name) => SOURCE_EXTENSIONS.has(path.extname(name).toLowerCase()))
+    .sort();
+}
+
 async function convertImage(fileName) {
   const inputPath = path.join(imagesDir, fileName);
-  const ext = path.extname(fileName);
-  const basename = path.basename(fileName, ext);
+  const basename = path.basename(fileName, path.extname(fileName));
   const outputPath = path.join(imagesDir, `${basename}.webp`);
 
-  if (!fs.existsSync(inputPath)) {
-    console.log(`⚠  Skipping ${fileName} — file not found`);
-    return null;
-  }
-
   const origSize = fs.statSync(inputPath).size;
+  const metadata = await sharp(inputPath).metadata();
+  const { width: origWidth, height: origHeight } = metadata;
 
-  // Read image and get metadata
-  const image = sharp(inputPath);
-  const metadata = await image.metadata();
-
-  const origWidth = metadata.width;
-  const origHeight = metadata.height;
-
-  // Build the sharp pipeline
-  let pipeline = sharp(inputPath);
-
-  const targetMaxWidth = maxWidthMap[fileName];
+  const targetMaxWidth = maxWidthMap[fileName] ?? null;
   let newWidth = origWidth;
   let newHeight = origHeight;
 
+  const pipeline = sharp(inputPath);
   if (targetMaxWidth !== null && origWidth > targetMaxWidth) {
-    const ratio = targetMaxWidth / origWidth;
     newWidth = targetMaxWidth;
-    newHeight = Math.round(origHeight * ratio);
-    pipeline = pipeline.resize({ width: targetMaxWidth, withoutEnlargement: true });
+    newHeight = Math.round(origHeight * (targetMaxWidth / origWidth));
+    pipeline.resize({ width: targetMaxWidth, withoutEnlargement: true });
   }
 
-  // Convert to WebP with quality 85
-  pipeline = pipeline.webp({ quality: 85 });
-
-  await pipeline.toFile(outputPath);
+  await pipeline.webp({ quality: 85 }).toFile(outputPath);
 
   const webpSize = fs.statSync(outputPath).size;
-  const compressionRatio = ((1 - webpSize / origSize) * 100).toFixed(1);
-
   return {
     fileName,
     origSize,
     webpSize,
-    compressionRatio,
+    compressionRatio: ((1 - webpSize / origSize) * 100).toFixed(1),
     origWidth,
     origHeight,
     newWidth,
@@ -79,60 +74,69 @@ async function convertImage(fileName) {
   };
 }
 
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 async function main() {
-  const imageFiles = [
-    'book1.jpg', 'book2.jpg', 'book3.jpg',
-    'book4.jpg', 'book5.jpg', 'book6.jpg', 'book7.jpg', 'book8.jpg',
-    'logo.png', 'admin.png',
-    'poster_adewale.jpg', 'poster_falana.png', 'poster_morounkeji.jpg',
-  ];
+  const sources = findSources();
 
-  console.log('Converting images to WebP...\n');
-
-  const results = [];
-  for (const file of imageFiles) {
-    const result = await convertImage(file);
-    if (result) results.push(result);
+  if (sources.length === 0) {
+    console.log(
+      `No .jpg/.png sources in ${imagesDir}.\n` +
+        'Drop new originals in there and re-run to convert them to .webp.'
+    );
+    return;
   }
 
-  console.log('\n📊 Results:\n');
-  console.log('Image'.padEnd(25) + 'Original'.padEnd(14) + 'WebP'.padEnd(14) + 'Res'.padEnd(18) + 'Saved');
+  console.log(`Converting ${sources.length} image(s) to WebP...\n`);
+
+  const results = [];
+  for (const file of sources) {
+    try {
+      results.push(await convertImage(file));
+    } catch (err) {
+      console.error(`✖ ${file}: ${err.message}`);
+      process.exitCode = 1;
+    }
+  }
+
+  if (results.length === 0) return;
+
+  const header =
+    'Image'.padEnd(25) +
+    'Original'.padEnd(14) +
+    'WebP'.padEnd(14) +
+    'Res'.padEnd(18) +
+    'Saved';
+  console.log(`\n${header}`);
   console.log('-'.repeat(80));
 
   let totalOrig = 0;
   let totalWebP = 0;
-
   for (const r of results) {
-    const origStr = formatBytes(r.origSize);
-    const webpStr = formatBytes(r.webpSize);
-    const resStr = `${r.newWidth}×${r.newHeight}`;
-    const savedStr = `${r.compressionRatio}%`;
     console.log(
       r.fileName.padEnd(25) +
-      origStr.padEnd(14) +
-      webpStr.padEnd(14) +
-      resStr.padEnd(18) +
-      savedStr
+        formatBytes(r.origSize).padEnd(14) +
+        formatBytes(r.webpSize).padEnd(14) +
+        `${r.newWidth}×${r.newHeight}`.padEnd(18) +
+        `${r.compressionRatio}%`
     );
     totalOrig += r.origSize;
     totalWebP += r.webpSize;
   }
 
   console.log('-'.repeat(80));
-  const totalSaved = ((1 - totalWebP / totalOrig) * 100).toFixed(1);
   console.log(
     'TOTAL'.padEnd(25) +
-    formatBytes(totalOrig).padEnd(14) +
-    formatBytes(totalWebP).padEnd(14) +
-    ''.padEnd(18) +
-    `${totalSaved}%`
+      formatBytes(totalOrig).padEnd(14) +
+      formatBytes(totalWebP).padEnd(14) +
+      ''.padEnd(18) +
+      `${((1 - totalWebP / totalOrig) * 100).toFixed(1)}%`
   );
-}
-
-function formatBytes(bytes) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  console.log('\nSources are left in place; delete them once you have checked the .webp output.');
 }
 
 main().catch((err) => {

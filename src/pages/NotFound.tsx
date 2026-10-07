@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Home, ArrowLeft, Search, Compass, BookX } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 /* ── Dust particle config ────────────────────────────────────────── */
 const DUST = Array.from({ length: 18 }, (_, i) => ({
@@ -27,40 +28,73 @@ const RUNES = ['᚛', '᚜', 'ᚉ', 'ᚋ', 'ᚐ', 'ᚌ', 'ᚔ', 'ᚑ'];
 function useGlitch(interval = 5000) {
   const [glitching, setGlitching] = useState(false);
   useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const id = setInterval(() => {
       setGlitching(true);
-      setTimeout(() => setGlitching(false), 350);
+      timeout = setTimeout(() => setGlitching(false), 350);
     }, interval);
-    return () => clearInterval(id);
+    // Both are needed: the interval stops the next glitch, the timeout stops the
+    // in-flight one from calling setState after unmount.
+    return () => {
+      clearInterval(id);
+      if (timeout !== undefined) clearTimeout(timeout);
+    };
   }, [interval]);
   return glitching;
 }
 
 /* ── Main 404 Page ───────────────────────────────────────────────── */
 export default function NotFound() {
+  useDocumentMeta('Page Not Found',
+    'The page you are looking for does not exist.');
   const navigate = useNavigate();
   const glitching = useGlitch(4500);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
-  /* Subtle canvas noise in background */
+  /* Subtle canvas noise in background.
+     A full-viewport ImageData at 1920x1080 allocates ~8.3MB (W*H*4) to render
+     grain at alpha 8 — barely visible, very expensive. A 128x128 tile (65KB)
+     repeated via createPattern is visually identical and ~130x cheaper. */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const v = Math.random() * 15;
-      imageData.data[i] = v;
-      imageData.data[i + 1] = v * 0.7;
-      imageData.data[i + 2] = v * 0.4;
-      imageData.data[i + 3] = 8;
-    }
-    ctx.putImageData(imageData, 0, 0);
+
+    const draw = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const TILE = 128;
+      const tile = document.createElement('canvas');
+      tile.width = TILE;
+      tile.height = TILE;
+      const tileCtx = tile.getContext('2d');
+      if (!tileCtx) return;
+
+      const imageData = tileCtx.createImageData(TILE, TILE);
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const v = Math.random() * 15;
+        imageData.data[i] = v;
+        imageData.data[i + 1] = v * 0.7;
+        imageData.data[i + 2] = v * 0.4;
+        imageData.data[i + 3] = 8;
+      }
+      tileCtx.putImageData(imageData, 0, 0);
+
+      const pattern = ctx.createPattern(tile, 'repeat');
+      if (!pattern) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
+    draw();
+    // The canvas is sized to the viewport, so a resize needs a redraw.
+    window.addEventListener('resize', draw);
+    return () => window.removeEventListener('resize', draw);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -90,7 +124,11 @@ export default function NotFound() {
         }}
       />
 
-      {/* ── Aurora blobs ── */}
+      {/* ── Aurora blobs ──
+          The radial gradient already fades to transparent, so `blur(80px)` on top
+          was doing little beyond the cost: it forces a full Gaussian re-render on
+          every frame of the scale/opacity loop, three times over. Interpolating the
+          stops instead gives the same soft glow for a fraction of the compositing. */}
       {[
         { top: '10%', left: '5%',  w: '45%', h: '55%', color: 'rgba(212,175,55,0.07)' },
         { top: '30%', right: '0',  w: '40%', h: '60%', color: 'rgba(170,80,30,0.06)' },
@@ -99,7 +137,11 @@ export default function NotFound() {
         <motion.div
           key={i}
           className="absolute rounded-full pointer-events-none"
-          style={{ ...blob, background: `radial-gradient(ellipse at center, ${blob.color} 0%, transparent 70%)`, filter: 'blur(80px)', zIndex: 0 }}
+          style={{
+            ...blob,
+            background: `radial-gradient(ellipse at center, ${blob.color} 0%, transparent 75%)`,
+            zIndex: 0,
+          }}
           animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
           transition={{ duration: 8 + i * 2, repeat: Infinity, delay: i * 1.5, ease: 'easeInOut' }}
         />

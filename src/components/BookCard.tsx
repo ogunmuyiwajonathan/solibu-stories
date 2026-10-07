@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/react';
 import { useIsFavourited, useAddFavourite, useRemoveFavourite } from '../data/favourites';
 import type { Id } from 'convex/_generated/dataModel';
 import type { Book } from '../data/books';
+import SmartImage from './SmartImage';
 
 interface BookCardProps {
   book: Book;
@@ -52,11 +53,10 @@ export default function BookCard({ book, index = 0, layout = 'grid', isDark = fa
               : 'bg-[#F8EEE2] border-[#E4D7C5] hover:bg-[#FEF6EA] hover:border-[#C89B5A]/30 shadow-sm'
           }`}>
             <div className="relative w-full sm:w-40 md:w-48 lg:w-56 aspect-[3/4] sm:aspect-auto sm:h-48 md:h-56 lg:h-64 overflow-hidden flex-shrink-0">
-              <img
+              <SmartImage
                 src={book.cover_url}
                 alt={book.title}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                loading="lazy"
                 width={400}
                 height={600}
               />
@@ -129,11 +129,10 @@ export default function BookCard({ book, index = 0, layout = 'grid', isDark = fa
             : 'bg-[#F8EEE2] border-[#E4D7C5] hover:bg-[#FEF6EA] hover:border-[#C89B5A]/30 shadow-sm'
         }`}>
           <div className="relative aspect-[2/3] overflow-hidden bg-[#0a0705]">
-            <img
+            <SmartImage
               src={book.cover_url}
               alt={book.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
               width={400}
               height={600}
             />

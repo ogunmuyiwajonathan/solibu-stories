@@ -21,6 +21,8 @@ export const loginWithGoogle = action({
       throw new Error("Not authorized - admin only");
     }
 
+    // Do not remove this audience check: it is what stops a valid Google id_token
+    // issued for some *other* application from being replayed against this login.
     if (payload.aud !== process.env.GOOGLE_CLIENT_ID) {
       throw new Error("Token was not issued for this application");
     }

@@ -3,8 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Phone, Send, CheckCircle, MessageSquare, ArrowRight, Clock, MapPin } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useDocumentMeta from '../hooks/useDocumentMeta';
 
 export default function Contact() {
+  useDocumentMeta('Contact',
+    'Get in touch with Solibu Stories.');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
